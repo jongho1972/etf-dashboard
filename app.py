@@ -285,6 +285,8 @@ with tab2:
 
         st.divider()
 
+        st.caption("3M (최근 3개월 수익률 기준) / 1Y (최근 1년 수익률 기준) — 주가차익과 총수익은 이 두 기준의 범위 안에서 실현될 수 있습니다.")
+
         # 상세 테이블
         fmt2 = {c: "{:,.0f}" for c in ["투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]}
         st.dataframe(df_result.style.format(fmt2), use_container_width=True)
