@@ -311,7 +311,7 @@ with tab3:
         options=sorted(final["Name"].tolist()),
         default=[
             "KODEX 미국S&P500",
-            "KODEX 미국나스닥100데일리커버드콜OTM",
+            "KODEX 미국S&P500데일리커버드콜OTM",
         ],
         max_selections=8,
     )
