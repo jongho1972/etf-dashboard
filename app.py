@@ -190,7 +190,7 @@ def sticky_dataframe(df, fmt=None, height=760):
 # ─────────────────────────────────────────────
 
 st.title("ETF 투자 대시보드")
-st.caption("한국 ETF 실시간 데이터 | yfinance + FinanceDataReader | 배당소득세 15.4% 적용 | 개발: 이종호")
+st.caption("한국 ETF 실시간 데이터 | yfinance + FinanceDataReader | 배당소득세 15.4% 적용 | 개발: 이종호 (jongho1972@gmail.com)")
 
 with st.spinner("ETF 데이터 불러오는 중... (첫 실행 시 최대 1분 소요)"):
     final = load_etf_data()
@@ -377,8 +377,9 @@ with tab3:
         "비교할 ETF 선택 (최대 8개)",
         options=sorted(final["Name"].tolist()),
         default=[
-            "KODEX 미국S&P500",
+            "KODEX 미국나스닥100데일리커버드콜OTM",
             "KODEX 미국S&P500데일리커버드콜OTM",
+            "KODEX 미국배당다우존스타겟커버드콜",
         ],
         max_selections=8,
     )
