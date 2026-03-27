@@ -291,11 +291,11 @@ with tab2:
     etf_names = sorted(final["Name"].tolist())
 
     default_rows = pd.DataFrame([
-        {"ETF 종목": "TIGER 배당커버드콜액티브",               "투자금 (원)": "100,000,000"},
-        {"ETF 종목": "KODEX 미국나스닥100데일리커버드콜OTM",   "투자금 (원)": "200,000,000"},
-        {"ETF 종목": "ACE 미국반도체데일리타겟커버드콜(합성)", "투자금 (원)": "100,000,000"},
-        {"ETF 종목": "KODEX 미국S&P500데일리커버드콜OTM",      "투자금 (원)": "100,000,000"},
-        {"ETF 종목": "ACE KRX금현물",                          "투자금 (원)": "100,000,000"},
+        {"ETF 종목": "TIGER 배당커버드콜액티브",               "예상 투자금 (원)": "100,000,000"},
+        {"ETF 종목": "KODEX 미국나스닥100데일리커버드콜OTM",   "예상 투자금 (원)": "200,000,000"},
+        {"ETF 종목": "ACE 미국반도체데일리타겟커버드콜(합성)", "예상 투자금 (원)": "100,000,000"},
+        {"ETF 종목": "KODEX 미국S&P500데일리커버드콜OTM",      "예상 투자금 (원)": "100,000,000"},
+        {"ETF 종목": "ACE KRX금현물",                          "예상 투자금 (원)": "100,000,000"},
     ])
 
     st.info("ETF 종목과 투자금을 직접 수정하거나 행을 추가/삭제할 수 있습니다. 셀을 클릭하면 편집됩니다.")
@@ -307,8 +307,8 @@ with tab2:
                 "ETF 종목 (수정 가능)", options=etf_names, required=True,
                 help="클릭하여 ETF 종목을 선택하세요",
             ),
-            "투자금 (원)": st.column_config.TextColumn(
-                "투자금 (원, 수정 가능)",
+            "예상 투자금 (원)": st.column_config.TextColumn(
+                "예상 투자금(원, 수정가능)",
                 help="콤마 포함 입력 가능 (예: 100,000,000)",
             ),
         },
@@ -320,7 +320,7 @@ with tab2:
         results_list = []
         for _, row in edited.iterrows():
             try:
-                cash = int(str(row["투자금 (원)"]).replace(",", ""))
+                cash = int(str(row["예상 투자금 (원)"]).replace(",", ""))
             except ValueError:
                 continue
             r = simul(final, row["ETF 종목"], cash)
@@ -336,7 +336,7 @@ with tab2:
     if "simul_result" in st.session_state:
         df_result = st.session_state["simul_result"]
 
-        st.info("📌 **1년 전 투자했다면 현재 수익** — 1년 전 동일 금액을 투자했을 때 현재 시점 기준 배당금 및 주가차익을 추정한 결과입니다.")
+        st.info("📌 **1년 전 투자했다면 현재 수익** — 1년 전 투자했다면 현재 시점 기준의 배당금 및 주가차익을 추정한 결과입니다.")
 
         total_invest = df_result["예상 투자금"].sum()
         total_annual_div = df_result["연배당금"].sum()
