@@ -131,7 +131,7 @@ def simul(final_df, etf_name, cash):
     return {
         "종목": etf_name,
         "배당일": 배당일,
-        "투자금": cash,
+        "예상 투자금": cash,
         "주식수": share_cnt,
         "연배당금": dividend_annual,
         "월배당금": dividend_monthly,
@@ -221,7 +221,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["ETF 조회", "투자 시뮬레이션", "ETF 비교 차트"])
+tab1, tab2, tab3 = st.tabs(["ETF 조회", "What-if 분석", "ETF 비교 차트"])
 
 
 # ── Tab 1: ETF 조회 ──────────────────────────
@@ -285,7 +285,7 @@ with tab1:
 # ── Tab 2: 투자 시뮬레이션 ───────────────────
 
 with tab2:
-    st.subheader("투자 시뮬레이션")
+    st.subheader("What-if 분석")
     st.caption("배당소득세 15.4% 적용 / 증권사 수수료 및 매매차익 소득세 미적용")
 
     etf_names = sorted(final["Name"].tolist())
@@ -316,7 +316,7 @@ with tab2:
         use_container_width=True,
     )
 
-    if st.button("시뮬레이션 실행", type="primary"):
+    if st.button("What-if 분석 실행", type="primary"):
         results_list = []
         for _, row in edited.iterrows():
             try:
@@ -336,7 +336,9 @@ with tab2:
     if "simul_result" in st.session_state:
         df_result = st.session_state["simul_result"]
 
-        total_invest = df_result["투자금"].sum()
+        st.info("📌 **1년 전 투자했다면 현재 수익** — 1년 전 동일 금액을 투자했을 때 현재 시점 기준 배당금 및 주가차익을 추정한 결과입니다.")
+
+        total_invest = df_result["예상 투자금"].sum()
         total_annual_div = df_result["연배당금"].sum()
         monthly_div = total_annual_div // 12
         total_profit_3m = df_result["주가차익(3M)"].sum()
@@ -353,7 +355,7 @@ with tab2:
         st.caption("3M (최근 3개월 수익률 기준) / 1Y (최근 1년 수익률 기준) — 주가차익과 총수익은 이 두 기준의 범위 안에서 실현될 수 있습니다.")
 
         # 상세 테이블
-        fmt2 = {c: "{:,.0f}" for c in ["투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]}
+        fmt2 = {c: "{:,.0f}" for c in ["예상 투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]}
         st.dataframe(df_result.style.format(fmt2), use_container_width=True)
 
         # 배당금 비중 파이 차트
