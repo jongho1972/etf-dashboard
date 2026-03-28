@@ -379,7 +379,7 @@ with tab2:
     if "simul_result" in st.session_state:
         df_result = st.session_state["simul_result"]
 
-        st.info("📌 1년 전 투자했다면 현재 시점 기준의 배당금 및 주가차익을 추정한 결과입니다.")
+        st.info("📌 1년전 투자해서 유지했다면 발생했을 배당금 및 주가차익을 계산한 결과입니다.")
 
         total_invest = df_result["예상 투자금"].sum()
         total_annual_div = df_result["연배당금"].sum()
