@@ -196,11 +196,11 @@ st.markdown("""
 <style>
 /* ── 공통 디자인 토큰 ── */
 :root {
-    --accent: #ff4b4b;
-    --bg: #f0f2f6;
-    --text: #31333f;
-    --text-muted: #666;
-    --border: #e0e0e0;
+    --accent: #007aff;
+    --bg: #f5f5f7;
+    --text: #1c1c1e;
+    --text-muted: #8e8e93;
+    --border: rgba(0,0,0,0.08);
 }
 
 /* ── Streamlit 기본 헤더/데코 숨김 → 커스텀 헤더 사용 ── */
@@ -208,38 +208,38 @@ header[data-testid="stHeader"] { display: none !important; }
 [data-testid="stDecoration"]   { display: none !important; }
 .main .block-container { padding-top: 0 !important; }
 
-/* ── 커스텀 헤더 (복권번호생성기와 동일 스타일) ── */
+/* ── 커스텀 헤더 ── */
 .app-header {
     background: #fff;
-    border-bottom: 3px solid #ff4b4b;
+    border-bottom: 0.5px solid rgba(0,0,0,0.1);
     padding: 24px 0 18px;
     margin: 0 -4rem 1.5rem;
     padding-left: 4rem; padding-right: 4rem;
 }
 .app-header h1 {
     font-size: 1.6rem; font-weight: 700;
-    color: #31333f; letter-spacing: -0.5px; margin: 0 0 6px;
+    color: #1c1c1e; letter-spacing: -0.5px; margin: 0 0 6px;
 }
 .app-header p {
-    font-size: 0.88rem; color: #666; margin: 0;
+    font-size: 0.88rem; color: #8e8e93; margin: 0;
 }
 
 /* ── 탭 스타일 ── */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 8px;
-    border-bottom: 3px solid #e0e0e0;
+    gap: 4px;
+    border-bottom: 0.5px solid rgba(0,0,0,0.1);
 }
 .stTabs [data-baseweb="tab"] {
-    font-size: 16px; font-weight: 600;
-    padding: 10px 24px;
-    border-radius: 8px 8px 0 0;
-    color: #666; background: #f0f2f6;
-    border: 1px solid #ddd; border-bottom: none;
+    font-size: 15px; font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 0;
+    color: #8e8e93; background: transparent;
+    border: none; border-bottom: 2px solid transparent;
 }
 .stTabs [aria-selected="true"] {
-    color: #ffffff !important;
-    background: #ff4b4b !important;
-    border-color: #ff4b4b !important;
+    color: #007aff !important;
+    background: transparent !important;
+    border-bottom-color: #007aff !important;
 }
 </style>
 
