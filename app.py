@@ -157,7 +157,8 @@ def sticky_dataframe(df, fmt=None, height=760):
     def th(col, i):
         pin = "position:sticky;left:0;z-index:3;" if i == 0 else "z-index:1;"
         align = "left" if i == 0 else "right"
-        return (f'<th style="position:sticky;top:0;{pin}'
+        width = "max-width:120px;overflow:hidden;text-overflow:ellipsis;" if i == 0 else ""
+        return (f'<th style="position:sticky;top:0;{pin}{width}'
                 f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
                 f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
                 f'{col}</th>')
@@ -170,8 +171,9 @@ def sticky_dataframe(df, fmt=None, height=760):
         for i, val in enumerate(row):
             if i == 0:
                 tds += (f'<td style="position:sticky;left:0;background:{bg};'
-                        f'padding:6px 12px;white-space:nowrap;'
-                        f'border-right:2px solid #ccc;font-weight:500;">{val}</td>')
+                        f'padding:6px 12px;max-width:120px;overflow:hidden;'
+                        f'text-overflow:ellipsis;white-space:nowrap;'
+                        f'border-right:2px solid #ccc;font-weight:500;" title="{val}">{val}</td>')
             else:
                 tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;font-family:monospace;">{val}</td>'
         rows += f"<tr>{tds}</tr>"
