@@ -192,29 +192,49 @@ def sticky_dataframe(df, fmt=None, height=760):
 # 메인 앱
 # ─────────────────────────────────────────────
 
-st.title("ETF 투자 대시보드")
-st.caption("한국 ETF 실시간 데이터 | yfinance + FinanceDataReader | 배당소득세 15.4% 적용 | 개발: 이종호 (jongho1972@gmail.com)")
-
-with st.spinner("ETF 데이터 불러오는 중... (첫 실행 시 최대 1분 소요)"):
-    final = load_etf_data()
-
-st.success(f"총 {len(final):,}개 ETF 로드 완료  |  기준일: {final['기준일'].max()}")
-
 st.markdown("""
 <style>
+/* ── 공통 디자인 토큰 ── */
+:root {
+    --accent: #ff4b4b;
+    --bg: #f0f2f6;
+    --text: #31333f;
+    --text-muted: #666;
+    --border: #e0e0e0;
+}
+
+/* ── Streamlit 기본 헤더/데코 숨김 → 커스텀 헤더 사용 ── */
+header[data-testid="stHeader"] { display: none !important; }
+[data-testid="stDecoration"]   { display: none !important; }
+.main .block-container { padding-top: 0 !important; }
+
+/* ── 커스텀 헤더 (복권번호생성기와 동일 스타일) ── */
+.app-header {
+    background: #fff;
+    border-bottom: 3px solid #ff4b4b;
+    padding: 24px 0 18px;
+    margin: 0 -4rem 1.5rem;
+    padding-left: 4rem; padding-right: 4rem;
+}
+.app-header h1 {
+    font-size: 1.6rem; font-weight: 700;
+    color: #31333f; letter-spacing: -0.5px; margin: 0 0 6px;
+}
+.app-header p {
+    font-size: 0.88rem; color: #666; margin: 0;
+}
+
+/* ── 탭 스타일 ── */
 .stTabs [data-baseweb="tab-list"] {
     gap: 8px;
     border-bottom: 3px solid #e0e0e0;
 }
 .stTabs [data-baseweb="tab"] {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 16px; font-weight: 600;
     padding: 10px 24px;
     border-radius: 8px 8px 0 0;
-    color: #666;
-    background: #f0f2f6;
-    border: 1px solid #ddd;
-    border-bottom: none;
+    color: #666; background: #f0f2f6;
+    border: 1px solid #ddd; border-bottom: none;
 }
 .stTabs [aria-selected="true"] {
     color: #ffffff !important;
@@ -222,7 +242,17 @@ st.markdown("""
     border-color: #ff4b4b !important;
 }
 </style>
+
+<div class="app-header">
+  <h1>📈 ETF 투자 대시보드</h1>
+  <p>국내 ETF 배당률 · 수익률 · 수익 시뮬레이션 | 배당소득세 15.4% 적용</p>
+</div>
 """, unsafe_allow_html=True)
+
+with st.spinner("ETF 데이터 불러오는 중... (첫 실행 시 최대 1분 소요)"):
+    final = load_etf_data()
+
+st.success(f"총 {len(final):,}개 ETF 로드 완료  |  기준일: {final['기준일'].max()}")
 
 tab1, tab2, tab3 = st.tabs(["ETF 조회", "What-if 분석", "ETF 비교 차트"])
 
@@ -430,3 +460,11 @@ with tab3:
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.error("차트에 표시할 데이터가 없습니다.")
+
+st.markdown("""
+<div style="text-align:center; padding:20px 0; font-size:0.78rem; color:#666;
+            border-top:1px solid #e0e0e0; margin-top:32px;">
+  이 서비스는 참고용이며, 투자 권유가 아닙니다.<br>
+  개발: 이종호 (<a href="mailto:jongho1972@gmail.com" style="color:#666;">jongho1972@gmail.com</a>)
+</div>
+""", unsafe_allow_html=True)
