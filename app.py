@@ -170,10 +170,11 @@ def sticky_dataframe(df, fmt=None, height=760):
         tds = ""
         for i, val in enumerate(row):
             if i == 0:
-                tds += (f'<td style="position:sticky;left:0;background:{bg};'
+                tds += (f'<td onclick="alert(\'{val}\')" '
+                        f'style="position:sticky;left:0;background:{bg};'
                         f'padding:6px 12px;max-width:120px;overflow:hidden;'
                         f'text-overflow:ellipsis;white-space:nowrap;'
-                        f'border-right:2px solid #ccc;font-weight:500;" title="{val}">{val}</td>')
+                        f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">{val}</td>')
             else:
                 tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;font-family:monospace;">{val}</td>'
         rows += f"<tr>{tds}</tr>"
