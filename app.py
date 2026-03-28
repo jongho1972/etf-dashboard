@@ -146,7 +146,10 @@ def simul(final_df, etf_name, cash):
 # Name 컬럼 고정 테이블 (모바일 지원)
 # ─────────────────────────────────────────────
 
+RET_COLS = {"3M수익률", "1Y수익률"}
+
 def sticky_dataframe(df, fmt=None, height=760):
+    orig = df.copy().reset_index(drop=True)
     disp = df.copy().reset_index(drop=True)
     if fmt:
         for col, pattern in fmt.items():
@@ -163,6 +166,7 @@ def sticky_dataframe(df, fmt=None, height=760):
                 f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
                 f'{col}</th>')
 
+    orig_cols = list(orig.columns)
     headers = "".join(th(col, i) for i, col in enumerate(disp.columns))
     rows = ""
     for idx, row in disp.iterrows():
@@ -176,7 +180,13 @@ def sticky_dataframe(df, fmt=None, height=760):
                         f'text-overflow:ellipsis;white-space:nowrap;'
                         f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">{val}</td>')
             else:
-                tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;font-family:monospace;">{val}</td>'
+                orig_col = orig_cols[i] if i < len(orig_cols) else ""
+                color = ""
+                if orig_col in RET_COLS:
+                    orig_val = orig.at[idx, orig_col]
+                    if pd.notna(orig_val):
+                        color = "color:#0050d0;" if orig_val < 0 else "color:#d00000;"
+                tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;font-family:monospace;{color}">{val}</td>'
         rows += f"<tr>{tds}</tr>"
 
     html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
