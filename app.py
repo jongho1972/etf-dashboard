@@ -302,7 +302,7 @@ with tab1:
 
     with col_a:
         st.markdown("**1M 배당률 Top 20**")
-        cols_div = ["Name", "Symbol", "시총", "주가", "월배당금", "1M배당률", "3M수익률", "배당일"]
+        cols_div = ["Name", "월배당금", "1M배당률", "3M수익률", "시총", "주가", "배당일", "Symbol"]
         fmt_div = {k: v for k, v in fmt.items() if k in cols_div}
         top_div = (
             filtered[filtered["배당일"] != "기타"]
@@ -314,7 +314,7 @@ with tab1:
 
     with col_b:
         st.markdown("**3M 수익률 Top 20**")
-        cols_ret = ["Name", "Symbol", "시총", "주가", "3M수익률", "1Y수익률"]
+        cols_ret = ["Name", "3M수익률", "1Y수익률", "시총", "주가", "Symbol"]
         fmt_ret = {k: v for k, v in fmt.items() if k in cols_ret}
         top_ret = (
             filtered[~filtered["Name"].str.contains("레버리지", na=False)]
