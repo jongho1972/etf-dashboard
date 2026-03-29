@@ -359,6 +359,12 @@ with tab2:
         use_container_width=True,
     )
 
+    # What-if 종목 목록이 바뀌면 비교 차트 탭 디폴트도 동기화
+    whatif_etf_names = [n for n in edited["ETF 종목"].dropna().tolist() if n in final["Name"].values][:8]
+    if whatif_etf_names != st.session_state.get("_prev_whatif"):
+        st.session_state["_prev_whatif"] = whatif_etf_names
+        st.session_state["compare_list"] = whatif_etf_names
+
     if st.button("What-if 분석 실행", type="primary"):
         results_list = []
         for _, row in edited.iterrows():
@@ -421,11 +427,7 @@ with tab3:
     compare_list = st.multiselect(
         "비교할 ETF 선택 (최대 8개)",
         options=sorted(final["Name"].tolist()),
-        default=[
-            "KODEX 미국나스닥100데일리커버드콜OTM",
-            "KODEX 미국S&P500데일리커버드콜OTM",
-            "KODEX 미국배당다우존스타겟커버드콜",
-        ],
+        key="compare_list",
         max_selections=8,
     )
 
