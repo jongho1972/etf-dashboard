@@ -155,7 +155,7 @@ def sticky_dataframe(df, fmt=None, height=760):
         for col, pattern in fmt.items():
             if col in disp.columns:
                 disp[col] = disp[col].apply(lambda x: pattern.format(x) if pd.notna(x) else "")
-    disp = disp.rename(columns={"시총": "시총(억원)", "주가": "주가(원)", "월배당금": "월배당금(원)"})
+    disp = disp.rename(columns={"시총": "시총(억원)", "주가": "주가(원)", "월배당금": "월배당(원)"})
 
     def th(col, i):
         pin = "position:sticky;left:0;z-index:3;" if i == 0 else "z-index:1;"
@@ -294,8 +294,8 @@ with tab1:
         "월배당금": "{:,.0f}",
         "1M배당률": "{:.1f}%",
         "1Y배당률": "{:.1f}%",
-        "1Y수익률": "{:.1f}%",
-        "3M수익률": "{:.1f}%",
+        "1Y수익률": "{:+.1f}%",
+        "3M수익률": "{:+.1f}%",
     }
 
     col_a, col_b = st.columns(2)
