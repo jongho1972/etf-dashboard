@@ -466,8 +466,9 @@ with tab3:
                 xaxis_title="날짜",
                 yaxis_title="정규화 주가",
                 hovermode="x unified",
-                legend=dict(orientation="h", yanchor="bottom", y=1.02),
-                height=550,
+                legend=dict(orientation="h", yanchor="top", y=-0.2, x=0, xanchor="left"),
+                margin=dict(b=160),
+                height=580,
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
