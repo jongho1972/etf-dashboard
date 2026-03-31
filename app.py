@@ -412,9 +412,22 @@ with tab2:
             labels=df_result["종목"],
             values=df_result["연배당금"],
             hole=0.4,
-            textinfo="label+percent",
+            textinfo="percent",
+            textposition="inside",
         ))
-        fig_pie.update_layout(title="종목별 연배당금 비중", height=400)
+        fig_pie.update_layout(
+            title="종목별 연배당금 비중",
+            height=500,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.15,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=11),
+            ),
+            margin=dict(b=120),
+        )
         st.plotly_chart(fig_pie, use_container_width=True)
 
 
