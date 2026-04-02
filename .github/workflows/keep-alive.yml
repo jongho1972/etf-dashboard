@@ -1,0 +1,17 @@
+name: Keep Alive
+
+on:
+  schedule:
+    # 매일 6시간마다 실행 (UTC 기준 0, 6, 12, 18시)
+    - cron: "0 0,6,12,18 * * *"
+  workflow_dispatch: # 수동 실행도 가능
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit App
+        run: |
+          curl -sSf -o /dev/null -w "HTTP %{http_code} — %{time_total}s\n" \
+            https://jhawk-etf-dashboard.streamlit.app \
+            || echo "App may be waking up (expected on first hit)"
