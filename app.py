@@ -113,10 +113,10 @@ def simul(final_df, etf_name, cash):
     price = target["주가"].iloc[0]
     price_pct_3m = target["3M수익률"].iloc[0] / 100
     price_pct_1y = target["1Y수익률"].iloc[0] / 100
-    div_pct_1y = target["1Y배당률"].iloc[0] / 100
+    annual_div_per_share = target["연간배당금"].iloc[0]
     share_cnt = int(cash // price)
 
-    raw_dividend = price * div_pct_1y * share_cnt
+    raw_dividend = annual_div_per_share * share_cnt
     dividend_annual = int(raw_dividend * (1 - 0.154))
     dividend_monthly = dividend_annual // 12
 
@@ -385,7 +385,7 @@ with tab2:
     if "simul_result" in st.session_state:
         df_result = st.session_state["simul_result"]
 
-        st.info("📌 1년전 투자해서 유지했다면 발생했을 배당금 및 주가차익을 계산한 결과입니다. (배당금 재투자로 인한 복리효과는 반영하지 않음)")
+        st.info("📌 현재 가격으로 투자 시, 최근 수익률 기준 예상 배당금 및 주가차익입니다. (배당금 재투자로 인한 복리효과는 반영하지 않음)")
 
         total_invest = df_result["예상 투자금"].sum()
         total_annual_div = df_result["연배당금"].sum()
