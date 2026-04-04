@@ -403,9 +403,24 @@ with tab2:
 
         st.caption("3M (최근 3개월 수익률 기준) / 1Y (최근 1년 수익률 기준) — 주가차익과 총수익은 이 두 기준의 범위 안에서 실현될 수 있습니다.")
 
-        # 상세 테이블
-        fmt2 = {c: "{:,.0f}" for c in ["예상 투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]}
-        st.dataframe(df_result.style.format(fmt2), use_container_width=True)
+        # 상세 테이블 (합계 행 포함)
+        sum_cols = ["예상 투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]
+        total_row = {c: df_result[c].sum() if c in df_result.columns else "" for c in df_result.columns}
+        total_row["종목"] = "합계"
+        total_row["배당일"] = ""
+        df_with_total = pd.concat([df_result, pd.DataFrame([total_row])], ignore_index=True)
+
+        fmt2 = {c: "{:,.0f}" for c in sum_cols}
+
+        def highlight_total(row):
+            if row["종목"] == "합계":
+                return ["background-color: #fff3cd; font-weight: bold"] * len(row)
+            return [""] * len(row)
+
+        st.dataframe(
+            df_with_total.style.apply(highlight_total, axis=1).format(fmt2),
+            use_container_width=True,
+        )
 
         # 배당금 비중 파이 차트
         fig_pie = go.Figure(go.Pie(
