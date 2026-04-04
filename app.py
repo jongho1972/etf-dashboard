@@ -178,7 +178,6 @@ def sticky_dataframe(df, fmt=None, height=760):
                         f'style="position:sticky;left:0;background:{bg};'
                         f'padding:6px 12px;max-width:120px;overflow:hidden;'
                         f'text-overflow:ellipsis;white-space:nowrap;'
-                        f'font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;'
                         f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">{val}</td>')
             else:
                 orig_col = orig_cols[i] if i < len(orig_cols) else ""
@@ -192,7 +191,7 @@ def sticky_dataframe(df, fmt=None, height=760):
 
     html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
             f'border:1px solid #e0e0e0;border-radius:4px;">'
-            f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:Georgia,\'Noto Serif KR\',serif;">'
+            f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
             f'<thead><tr>{headers}</tr></thead>'
             f'<tbody>{rows}</tbody>'
             f'</table></div>')
@@ -436,15 +435,14 @@ with tab2:
                 if col in sum_cols:
                     val = f"{int(val):,}"
                 align = "left" if i == 0 else "right"
-                sans = "font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;" if col == "종목" else ""
                 tds += (f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};'
                         f'text-align:{align};font-variant-numeric:tabular-nums;'
-                        f'color:#1c1c1e;{weight}{border_top}{sans}">{val}</td>')
+                        f'color:#1c1c1e;{weight}{border_top}">{val}</td>')
             sim_rows += f"<tr>{tds}</tr>"
         sim_height = min(60 + num_rows * 38, 500)
         sim_html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{sim_height}px;'
                     f'border:1px solid #e0e0e0;border-radius:4px;">'
-                    f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:Georgia,\'Noto Serif KR\',serif;">'
+                    f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
                     f'<thead><tr>{sim_headers}</tr></thead>'
                     f'<tbody>{sim_rows}</tbody>'
                     f'</table></div>')
