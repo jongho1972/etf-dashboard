@@ -403,7 +403,7 @@ with tab2:
 
         st.caption("3M (최근 3개월 수익률 기준) / 1Y (최근 1년 수익률 기준) — 주가차익과 총수익은 이 두 기준의 범위 안에서 실현될 수 있습니다.")
 
-        # 상세 테이블 (합계 행 포함)
+        # 상세 테이블 (합계 행 포함) — HTML 렌더링
         sum_cols = ["예상 투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]
         total_row = {"종목": "합계", "배당일": ""}
         for c in sum_cols:
@@ -414,17 +414,39 @@ with tab2:
             if c in df_with_total.columns:
                 df_with_total[c] = pd.to_numeric(df_with_total[c], errors="coerce").fillna(0).astype(int)
 
-        fmt2 = {c: "{:,.0f}" for c in sum_cols}
-
-        def highlight_total(row):
-            if row["종목"] == "합계":
-                return ["background-color: #fff3cd; font-weight: bold; color: #1c1c1e"] * len(row)
-            return [""] * len(row)
-
-        st.dataframe(
-            df_with_total.style.apply(highlight_total, axis=1).format(fmt2),
-            use_container_width=True,
-        )
+        disp_cols = list(df_with_total.columns)
+        num_rows = len(df_with_total)
+        sim_headers = ""
+        for i, col in enumerate(disp_cols):
+            align = "left" if i == 0 else "right"
+            sim_headers += (f'<th style="position:sticky;top:0;z-index:1;'
+                            f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
+                            f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
+                            f'{col}</th>')
+        sim_rows = ""
+        for idx, row in df_with_total.iterrows():
+            is_total = row["종목"] == "합계"
+            bg = "#fff3cd" if is_total else ("#ffffff" if idx % 2 == 0 else "#f5f7fb")
+            weight = "font-weight:700;" if is_total else ""
+            border_top = "border-top:2px solid #999;" if is_total else ""
+            tds = ""
+            for i, col in enumerate(disp_cols):
+                val = row[col]
+                if col in sum_cols:
+                    val = f"{int(val):,}"
+                align = "left" if i == 0 else "right"
+                tds += (f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};'
+                        f'text-align:{align};font-variant-numeric:tabular-nums;'
+                        f'font-family:monospace;color:#1c1c1e;{weight}{border_top}">{val}</td>')
+            sim_rows += f"<tr>{tds}</tr>"
+        sim_height = min(60 + num_rows * 38, 500)
+        sim_html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{sim_height}px;'
+                    f'border:1px solid #e0e0e0;border-radius:4px;">'
+                    f'<table style="border-collapse:collapse;font-size:13px;width:100%;">'
+                    f'<thead><tr>{sim_headers}</tr></thead>'
+                    f'<tbody>{sim_rows}</tbody>'
+                    f'</table></div>')
+        components.html(sim_html, height=sim_height + 4, scrolling=False)
 
         # 배당금 비중 파이 차트
         fig_pie = go.Figure(go.Pie(
