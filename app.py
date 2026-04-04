@@ -405,10 +405,14 @@ with tab2:
 
         # 상세 테이블 (합계 행 포함)
         sum_cols = ["예상 투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]
-        total_row = {c: df_result[c].sum() if c in df_result.columns else "" for c in df_result.columns}
-        total_row["종목"] = "합계"
-        total_row["배당일"] = ""
+        total_row = {"종목": "합계", "배당일": ""}
+        for c in sum_cols:
+            if c in df_result.columns:
+                total_row[c] = int(df_result[c].sum())
         df_with_total = pd.concat([df_result, pd.DataFrame([total_row])], ignore_index=True)
+        for c in sum_cols:
+            if c in df_with_total.columns:
+                df_with_total[c] = pd.to_numeric(df_with_total[c], errors="coerce").fillna(0).astype(int)
 
         fmt2 = {c: "{:,.0f}" for c in sum_cols}
 
