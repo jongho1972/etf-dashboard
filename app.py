@@ -418,7 +418,7 @@ with tab2:
 
         def highlight_total(row):
             if row["종목"] == "합계":
-                return ["background-color: #fff3cd; font-weight: bold"] * len(row)
+                return ["background-color: #fff3cd; font-weight: bold; color: #1c1c1e"] * len(row)
             return [""] * len(row)
 
         st.dataframe(
