@@ -186,12 +186,12 @@ def sticky_dataframe(df, fmt=None, height=760):
                     orig_val = orig.at[idx, orig_col]
                     if pd.notna(orig_val):
                         color = "color:#0050d0;" if orig_val < 0 else "color:#d00000;"
-                tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;font-family:monospace;{color}">{val}</td>'
+                tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;{color}">{val}</td>'
         rows += f"<tr>{tds}</tr>"
 
     html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
             f'border:1px solid #e0e0e0;border-radius:4px;">'
-            f'<table style="border-collapse:collapse;font-size:13px;width:100%;">'
+            f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:Georgia,\'Noto Serif KR\',serif;">'
             f'<thead><tr>{headers}</tr></thead>'
             f'<tbody>{rows}</tbody>'
             f'</table></div>')
@@ -437,12 +437,12 @@ with tab2:
                 align = "left" if i == 0 else "right"
                 tds += (f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};'
                         f'text-align:{align};font-variant-numeric:tabular-nums;'
-                        f'font-family:monospace;color:#1c1c1e;{weight}{border_top}">{val}</td>')
+                        f'color:#1c1c1e;{weight}{border_top}">{val}</td>')
             sim_rows += f"<tr>{tds}</tr>"
         sim_height = min(60 + num_rows * 38, 500)
         sim_html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{sim_height}px;'
                     f'border:1px solid #e0e0e0;border-radius:4px;">'
-                    f'<table style="border-collapse:collapse;font-size:13px;width:100%;">'
+                    f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:Georgia,\'Noto Serif KR\',serif;">'
                     f'<thead><tr>{sim_headers}</tr></thead>'
                     f'<tbody>{sim_rows}</tbody>'
                     f'</table></div>')
