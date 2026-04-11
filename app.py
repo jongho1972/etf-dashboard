@@ -396,10 +396,10 @@ with tab2:
         # 요약 지표
         summary_html = f"""
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0;">
-          <div><div style="font-size:0.85rem;color:#8e8e93;">총 투자금</div><div style="font-size:1.4rem;font-weight:700;color:#1c1c1e;">{total_invest:,.0f}원</div></div>
-          <div><div style="font-size:0.85rem;color:#8e8e93;">연간 배당금</div><div style="font-size:1.4rem;font-weight:700;color:#1c1c1e;">{total_annual_div:,.0f}원</div></div>
-          <div><div style="font-size:0.85rem;color:#8e8e93;">월 배당금</div><div style="font-size:1.4rem;font-weight:700;color:#1c1c1e;">{monthly_div:,.0f}원</div></div>
-          <div><div style="font-size:0.85rem;color:#8e8e93;">연간 주가차익</div><div style="font-size:1.4rem;font-weight:700;color:#1c1c1e;">{total_profit_3m:,.0f}원</div></div>
+          <div><div style="font-size:0.85rem;color:#8e8e93;">총 투자금</div><div style="font-size:1.4rem;font-weight:700;">{total_invest:,.0f}원</div></div>
+          <div><div style="font-size:0.85rem;color:#8e8e93;">연간 배당금</div><div style="font-size:1.4rem;font-weight:700;">{total_annual_div:,.0f}원</div></div>
+          <div><div style="font-size:0.85rem;color:#8e8e93;">월 배당금</div><div style="font-size:1.4rem;font-weight:700;">{monthly_div:,.0f}원</div></div>
+          <div><div style="font-size:0.85rem;color:#8e8e93;">연간 주가차익</div><div style="font-size:1.4rem;font-weight:700;">{total_profit_3m:,.0f}원</div></div>
         </div>
         """
         st.markdown(summary_html, unsafe_allow_html=True)
