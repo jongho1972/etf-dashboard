@@ -2,7 +2,9 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import yfinance as yf
-import FinanceDataReader as fdr
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import plotly.graph_objects as go
 from concurrent.futures import ThreadPoolExecutor
 from warnings import filterwarnings
@@ -75,10 +77,35 @@ def fetch_etf_data(item):
         return None
 
 
+def _fetch_etf_listing():
+    url = "https://finance.naver.com/api/sise/etfItemList.nhn"
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+        ),
+        "Referer": "https://finance.naver.com/sise/etf.naver",
+    }
+    session = requests.Session()
+    retry = Retry(
+        total=3,
+        backoff_factor=1.5,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"],
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    r = session.get(url, headers=headers, timeout=(5, 15))
+    r.raise_for_status()
+    rows = r.json()["result"]["etfItemList"]
+    df = pd.DataFrame(rows)
+    return df.rename(
+        columns={"itemcode": "Symbol", "itemname": "Name", "marketSum": "MarCap"}
+    )[["Symbol", "Name", "MarCap"]]
+
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_etf_data():
-    etfs = fdr.StockListing("ETF/KR")
-    etfs_list = etfs[["Symbol", "Name", "MarCap"]]
+    etfs_list = _fetch_etf_listing()
     symbol_list = etfs_list["Symbol"].tolist()
     symbol_list = [s for s in symbol_list if s not in {"265690"}]
 
