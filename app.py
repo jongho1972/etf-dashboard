@@ -179,7 +179,7 @@ def sticky_dataframe(df, fmt=None, height=760):
         for i, val in enumerate(row):
             if i == 0:
                 if symbol:
-                    onclick = f"showEtfModal('{val}','{symbol}')"
+                    onclick = f"showEtfModal('{val}','{symbol}',event.clientY)"
                 else:
                     onclick = f"alert('{val}')"
                 tds += (f'<td onclick="{onclick}" '
@@ -198,9 +198,11 @@ def sticky_dataframe(df, fmt=None, height=760):
         rows += f"<tr>{tds}</tr>"
 
     modal = (
-        '<div id="etf-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;'
-        'background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;">'
-        '<div style="background:white;padding:20px 18px 16px;border-radius:14px;min-width:260px;max-width:80%;'
+        '<div id="etf-modal" onclick="if(event.target===this)closeEtfModal()" '
+        'style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;'
+        'background:rgba(0,0,0,0.4);z-index:9999;">'
+        '<div id="etf-modal-box" style="position:absolute;left:50%;transform:translateX(-50%);top:80px;'
+        'background:white;padding:20px 18px 16px;border-radius:14px;min-width:260px;max-width:80%;'
         'box-shadow:0 8px 32px rgba(0,0,0,0.2);font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
         '<div id="etf-modal-name" style="font-size:15px;font-weight:600;color:#1c1c1e;margin-bottom:16px;'
         'text-align:center;word-break:keep-all;line-height:1.4;"></div>'
@@ -212,9 +214,11 @@ def sticky_dataframe(df, fmt=None, height=760):
         '</div></div></div>'
         '<script>'
         'let _etfSymbol="";'
-        'function showEtfModal(n,s){_etfSymbol=s;'
+        'function showEtfModal(n,s,y){_etfSymbol=s;'
         'document.getElementById("etf-modal-name").textContent=n;'
-        'document.getElementById("etf-modal").style.display="flex";}'
+        'var box=document.getElementById("etf-modal-box");'
+        'box.style.top=Math.max(20,(y||80)-110)+"px";'
+        'document.getElementById("etf-modal").style.display="block";}'
         'function closeEtfModal(){document.getElementById("etf-modal").style.display="none";}'
         'function openEtfInfo(){window.open("https://www.k-etf.com/etf/"+_etfSymbol,"_blank");closeEtfModal();}'
         '</script>'
