@@ -169,14 +169,20 @@ def sticky_dataframe(df, fmt=None, height=760):
                 f'{col}</th>')
 
     orig_cols = list(orig.columns)
+    has_symbol = "Symbol" in orig_cols
     headers = "".join(th(col, i) for i, col in enumerate(disp.columns))
     rows = ""
     for idx, row in disp.iterrows():
         bg = "#ffffff" if idx % 2 == 0 else "#f5f7fb"
+        symbol = orig.at[idx, "Symbol"] if has_symbol else ""
         tds = ""
         for i, val in enumerate(row):
             if i == 0:
-                tds += (f'<td onclick="alert(\'{val}\')" '
+                if symbol:
+                    onclick = f"showEtfModal('{val}','{symbol}')"
+                else:
+                    onclick = f"alert('{val}')"
+                tds += (f'<td onclick="{onclick}" '
                         f'style="position:sticky;left:0;background:{bg};'
                         f'padding:6px 12px;max-width:120px;overflow:hidden;'
                         f'text-overflow:ellipsis;white-space:nowrap;'
@@ -191,7 +197,30 @@ def sticky_dataframe(df, fmt=None, height=760):
                 tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;{color}">{val}</td>'
         rows += f"<tr>{tds}</tr>"
 
-    html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
+    modal = (
+        '<div id="etf-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;'
+        'background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center;">'
+        '<div style="background:white;padding:20px 18px 16px;border-radius:14px;min-width:260px;max-width:80%;'
+        'box-shadow:0 8px 32px rgba(0,0,0,0.2);font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
+        '<div id="etf-modal-name" style="font-size:15px;font-weight:600;color:#1c1c1e;margin-bottom:16px;'
+        'text-align:center;word-break:keep-all;line-height:1.4;"></div>'
+        '<div style="display:flex;gap:8px;">'
+        '<button onclick="openEtfInfo()" style="flex:1;padding:10px;background:#007aff;color:white;border:none;'
+        'border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">상품정보</button>'
+        '<button onclick="closeEtfModal()" style="flex:1;padding:10px;background:#e5e5ea;color:#1c1c1e;border:none;'
+        'border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">닫기</button>'
+        '</div></div></div>'
+        '<script>'
+        'let _etfSymbol="";'
+        'function showEtfModal(n,s){_etfSymbol=s;'
+        'document.getElementById("etf-modal-name").textContent=n;'
+        'document.getElementById("etf-modal").style.display="flex";}'
+        'function closeEtfModal(){document.getElementById("etf-modal").style.display="none";}'
+        'function openEtfInfo(){window.open("https://www.k-etf.com/etf/"+_etfSymbol,"_blank");closeEtfModal();}'
+        '</script>'
+    )
+    html = (f'{modal}'
+            f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
             f'border:1px solid #e0e0e0;border-radius:4px;">'
             f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
             f'<thead><tr>{headers}</tr></thead>'
