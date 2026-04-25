@@ -573,6 +573,6 @@ st.markdown("""
 <div style="text-align:center; padding:20px 0; font-size:0.78rem; color:#666;
             border-top:1px solid #e0e0e0; margin-top:32px;">
   이 서비스는 참고용이며, 투자 권유가 아닙니다.<br>
-  개발: 이종호 (<a href="mailto:jongho1972@gmail.com" style="color:#666;">jongho1972@gmail.com</a>)
+  Built with Claude Code by 이종호 (<a href="mailto:jongho1972@gmail.com" style="color:#666;">jongho1972@gmail.com</a>)
 </div>
 """, unsafe_allow_html=True)
