@@ -165,11 +165,12 @@ def sticky_dataframe(df, fmt=None, height=760):
     def th(col, i, orig_col):
         pin = "position:sticky;left:0;z-index:3;" if i == 0 else "z-index:1;"
         align = "left" if i == 0 else "right"
-        cls = "etf-name-col" if i == 0 else ("etf-symbol-col" if orig_col == "Symbol" else "")
+        cls = "etf-symbol-col" if orig_col == "Symbol" else ""
+        inner = f'<div class="etf-name-text">{col}</div>' if i == 0 else col
         return (f'<th class="{cls}" style="position:sticky;top:0;{pin}'
                 f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
                 f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
-                f'{col}</th>')
+                f'{inner}</th>')
 
     headers = "".join(th(col, i, orig_cols[i] if i < len(orig_cols) else "") for i, col in enumerate(disp.columns))
     rows = ""
@@ -184,11 +185,11 @@ def sticky_dataframe(df, fmt=None, height=760):
                     onclick = f"showEtfModal('{val}','{symbol}',event.clientY)"
                 else:
                     onclick = f"alert('{val}')"
-                tds += (f'<td class="etf-name-col" onclick="{onclick}" '
+                tds += (f'<td onclick="{onclick}" '
                         f'style="position:sticky;left:0;background:{bg};'
-                        f'padding:6px 12px;overflow:hidden;'
-                        f'text-overflow:ellipsis;white-space:nowrap;'
-                        f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">{val}</td>')
+                        f'padding:6px 12px;'
+                        f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">'
+                        f'<div class="etf-name-text">{val}</div></td>')
             else:
                 cls = "etf-symbol-col" if orig_col == "Symbol" else ""
                 color = ""
@@ -227,17 +228,18 @@ def sticky_dataframe(df, fmt=None, height=760):
     )
     style = (
         '<style>'
-        '.etf-name-col{max-width:120px;}'
+        '.etf-name-text{width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
         '@media (max-width:600px){'
-        '.etf-name-col{max-width:200px;}'
+        '.etf-name-text{width:140px;}'
         '.etf-symbol-col{display:none;}'
+        '.etf-table td,.etf-table th{padding:6px 6px !important;font-size:12px !important;}'
         '}'
         '</style>'
     )
     html = (f'{style}{modal}'
             f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
             f'border:1px solid #e0e0e0;border-radius:4px;">'
-            f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
+            f'<table class="etf-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
             f'<thead><tr>{headers}</tr></thead>'
             f'<tbody>{rows}</tbody>'
             f'</table></div>')
