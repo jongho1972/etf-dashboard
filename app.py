@@ -159,42 +159,44 @@ def sticky_dataframe(df, fmt=None, height=760):
                 disp[col] = disp[col].apply(lambda x: pattern.format(x) if pd.notna(x) else "")
     disp = disp.rename(columns={"시총": "시총(억원)", "주가": "주가(원)", "월배당금": "월배당(원)"})
 
-    def th(col, i):
+    orig_cols = list(orig.columns)
+    has_symbol = "Symbol" in orig_cols
+
+    def th(col, i, orig_col):
         pin = "position:sticky;left:0;z-index:3;" if i == 0 else "z-index:1;"
         align = "left" if i == 0 else "right"
-        width = "max-width:120px;overflow:hidden;text-overflow:ellipsis;" if i == 0 else ""
-        return (f'<th style="position:sticky;top:0;{pin}{width}'
+        cls = "etf-name-col" if i == 0 else ("etf-symbol-col" if orig_col == "Symbol" else "")
+        return (f'<th class="{cls}" style="position:sticky;top:0;{pin}'
                 f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
                 f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
                 f'{col}</th>')
 
-    orig_cols = list(orig.columns)
-    has_symbol = "Symbol" in orig_cols
-    headers = "".join(th(col, i) for i, col in enumerate(disp.columns))
+    headers = "".join(th(col, i, orig_cols[i] if i < len(orig_cols) else "") for i, col in enumerate(disp.columns))
     rows = ""
     for idx, row in disp.iterrows():
         bg = "#ffffff" if idx % 2 == 0 else "#f5f7fb"
         symbol = orig.at[idx, "Symbol"] if has_symbol else ""
         tds = ""
         for i, val in enumerate(row):
+            orig_col = orig_cols[i] if i < len(orig_cols) else ""
             if i == 0:
                 if symbol:
                     onclick = f"showEtfModal('{val}','{symbol}',event.clientY)"
                 else:
                     onclick = f"alert('{val}')"
-                tds += (f'<td onclick="{onclick}" '
+                tds += (f'<td class="etf-name-col" onclick="{onclick}" '
                         f'style="position:sticky;left:0;background:{bg};'
-                        f'padding:6px 12px;max-width:120px;overflow:hidden;'
+                        f'padding:6px 12px;overflow:hidden;'
                         f'text-overflow:ellipsis;white-space:nowrap;'
                         f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">{val}</td>')
             else:
-                orig_col = orig_cols[i] if i < len(orig_cols) else ""
+                cls = "etf-symbol-col" if orig_col == "Symbol" else ""
                 color = ""
                 if orig_col in RET_COLS:
                     orig_val = orig.at[idx, orig_col]
                     if pd.notna(orig_val):
                         color = "color:#0050d0;" if orig_val < 0 else "color:#d00000;"
-                tds += f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;{color}">{val}</td>'
+                tds += f'<td class="{cls}" style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;{color}">{val}</td>'
         rows += f"<tr>{tds}</tr>"
 
     modal = (
@@ -223,7 +225,16 @@ def sticky_dataframe(df, fmt=None, height=760):
         'function openEtfInfo(){window.open("https://www.k-etf.com/etf/"+_etfSymbol,"_blank");closeEtfModal();}'
         '</script>'
     )
-    html = (f'{modal}'
+    style = (
+        '<style>'
+        '.etf-name-col{max-width:120px;}'
+        '@media (max-width:600px){'
+        '.etf-name-col{max-width:200px;}'
+        '.etf-symbol-col{display:none;}'
+        '}'
+        '</style>'
+    )
+    html = (f'{style}{modal}'
             f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
             f'border:1px solid #e0e0e0;border-radius:4px;">'
             f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
