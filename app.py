@@ -377,19 +377,40 @@ with tab1:
 
 with tab2:
     st.subheader("What-if 분석")
-    st.caption("배당소득세 15.4% 적용 / 증권사 수수료 및 매매차익 소득세 미적용")
 
     etf_names = sorted(final["Name"].tolist())
 
     default_rows = pd.DataFrame([
-        {"ETF 종목": "RISE 미국AI밸류체인데일리고정커버드콜",    "예상 투자금 (원)": "120,000,000"},
         {"ETF 종목": "KODEX 미국나스닥100데일리커버드콜OTM",     "예상 투자금 (원)": "140,000,000"},
-        {"ETF 종목": "ACE 미국반도체데일리타겟커버드콜(합성)",   "예상 투자금 (원)": "70,000,000"},
-        {"ETF 종목": "RISE 미국배당100데일리고정커버드콜",       "예상 투자금 (원)": "120,000,000"},
+        {"ETF 종목": "RISE 미국AI밸류체인데일리고정커버드콜",    "예상 투자금 (원)": "120,000,000"},
         {"ETF 종목": "KODEX 미국S&P500데일리커버드콜OTM",        "예상 투자금 (원)": "110,000,000"},
-        {"ETF 종목": "TIGER 배당커버드콜액티브",                 "예상 투자금 (원)": "80,000,000"},
-        {"ETF 종목": "KODEX 200타겟위클리커버드콜",              "예상 투자금 (원)": "60,000,000"},
+        {"ETF 종목": "KODEX 금융고배당TOP10타겟위클리커버드콜",  "예상 투자금 (원)": "80,000,000"},
+        {"ETF 종목": "KODEX 미국배당다우존스타겟커버드콜",       "예상 투자금 (원)": "70,000,000"},
+        {"ETF 종목": "ACE 미국반도체데일리타겟커버드콜(합성)",   "예상 투자금 (원)": "60,000,000"},
+        {"ETF 종목": "KODEX 미국배당커버드콜액티브",             "예상 투자금 (원)": "60,000,000"},
+        {"ETF 종목": "TIGER 배당커버드콜액티브",                 "예상 투자금 (원)": "60,000,000"},
     ])
+
+    st.markdown(
+        """
+        <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;">
+          <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
+          <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
+            <b>총 투자금 7억</b> (미국 80% · 국내 20%) — 현금흐름 중심 커버드콜 · <b>연배당금액 최대화</b><br/>
+            <br/>
+            <b>선정 기준</b> (우선순위 순)<br/>
+            &nbsp;&nbsp;① 세후 1Y 배당률(현재가 기준) 가중 비중 분배<br/>
+            &nbsp;&nbsp;② 월배당 ETF<br/>
+            &nbsp;&nbsp;③ 3M 수익률 ≥ 0<br/>
+            &nbsp;&nbsp;④ 컨셉별 Top1만 유지 (중복 통합)<br/>
+            <br/>
+            <b>제외</b>: 단일종목 ETF(팔란티어·테슬라 등), 미국 외 해외(대만·중국·일본·유럽·인도·글로벌)<br/>
+            <b>편입 단위</b>: 종목별 최소 5천만원 / 천만원 단위 반올림
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.info("ETF 종목과 투자금을 직접 수정하거나 행을 추가/삭제할 수 있습니다. 셀을 클릭하면 편집됩니다.")
 
@@ -435,7 +456,12 @@ with tab2:
     if "simul_result" in st.session_state:
         df_result = st.session_state["simul_result"]
 
-        st.info("📌 현재 가격으로 투자 시, 최근 수익률 기준 예상 배당금 및 주가차익입니다. (배당금 재투자로 인한 복리효과는 반영하지 않음)")
+        st.info(
+            "📌 현재 가격으로 투자 시, 최근 수익률 기준 예상 배당금 및 주가차익입니다.\n\n"
+            "- 배당소득세 15.4% 적용\n"
+            "- 증권사 수수료 및 매매차익 소득세 미적용\n"
+            "- 배당금 재투자로 인한 복리효과는 반영하지 않음"
+        )
 
         total_invest = df_result["예상 투자금"].sum()
         total_annual_div = df_result["연배당금"].sum()
