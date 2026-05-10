@@ -252,6 +252,14 @@ def sticky_dataframe(df, fmt=None, height=760):
 
 st.markdown("""
 <style>
+/* ── 라이트 모드 고정 (OS/브라우저 다크모드 무시) ── */
+:root { color-scheme: light; }
+html, body, [data-testid="stAppViewContainer"] {
+    color-scheme: light !important;
+    background: #ffffff !important;
+    color: #1c1c1e !important;
+}
+
 /* ── 공통 디자인 토큰 ── */
 :root {
     --accent: #007aff;
