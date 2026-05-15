@@ -27,13 +27,22 @@ def fetch_etf_data(item):
         if hist.empty or len(hist) < 20:
             return None
 
-        latest_date = hist.index.max()
-        three_months_ago_date = latest_date - pd.DateOffset(months=3)
-        one_year_ago_date = hist.index.min()
+        # Yahoo가 가끔 Close 전체를 NaN/0으로 돌려주는 케이스 차단
+        close = hist["Close"].dropna()
+        close = close[close > 0]
+        if len(close) < 20:
+            return None
 
-        latest_price = hist.loc[hist.index <= latest_date, "Close"].iloc[-1]
-        three_months_ago_price = hist.loc[hist.index <= three_months_ago_date, "Close"].iloc[-1]
-        one_year_ago_price = hist.loc[hist.index <= one_year_ago_date, "Close"].iloc[-1]
+        latest_date = close.index.max()
+        three_months_ago_date = latest_date - pd.DateOffset(months=3)
+        one_year_ago_date = close.index.min()
+
+        latest_price = close.loc[close.index <= latest_date].iloc[-1]
+        three_months_ago_price = close.loc[close.index <= three_months_ago_date].iloc[-1]
+        one_year_ago_price = close.loc[close.index <= one_year_ago_date].iloc[-1]
+
+        if not (latest_price > 0 and three_months_ago_price > 0 and one_year_ago_price > 0):
+            return None
 
         dividends = hist[hist["Dividends"] > 0]["Dividends"]
         dividend_day = "기타"
