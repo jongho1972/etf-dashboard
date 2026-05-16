@@ -10,7 +10,7 @@ from warnings import filterwarnings
 filterwarnings("ignore")
 
 st.set_page_config(
-    page_title="ETF 투자 대시보드",
+    page_title="ETF 투자 가이드",
     page_icon="📈",
     layout="wide",
 )
@@ -251,8 +251,7 @@ header[data-testid="stHeader"] { display: none !important; }
 </style>
 
 <div class="app-header">
-  <h1>📈 ETF 투자 대시보드</h1>
-  <p>국내 ETF 배당률 · 수익률 · 수익 시뮬레이션 | 배당소득세 15.4% 적용</p>
+  <h1>📈 ETF 투자 가이드</h1>
 </div>
 """, unsafe_allow_html=True)
 
@@ -263,13 +262,13 @@ st.success(
     f"  ·  스냅샷 {snapshot_mtime_kst()}"
 )
 
-tab1, tab2, tab3 = st.tabs(["ETF 조회", "What-if 분석", "ETF 비교 차트"])
+tab1, tab2, tab3 = st.tabs(["ETF 상품 조회", "What-if 분석", "ETF 비교 차트"])
 
 
-# ── Tab 1: ETF 조회 ──────────────────────────
+# ── Tab 1: ETF 상품 조회 ──────────────────────────
 
 with tab1:
-    st.subheader("ETF 목록 조회")
+    st.subheader("ETF 상품 조회")
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -277,7 +276,7 @@ with tab1:
     with col2:
         div_filter = st.selectbox("배당일", ["전체", "월초", "월중", "기타"])
     with col3:
-        keyword = st.text_input("종목명 검색")
+        keyword = st.text_input("종목명 키워드")
 
     cols_show = ["Symbol", "Name", "시총", "주가", "월배당금", "1M배당률", "1Y배당률", "1Y수익률", "3M수익률", "배당일"]
     filtered = final[final["시총"] > min_marcap][cols_show].copy()
