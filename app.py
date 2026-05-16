@@ -650,6 +650,7 @@ with tab3:
     if compare_list and st.button("차트 그리기", type="primary"):
         fig = go.Figure()
         with st.spinner("주가 데이터 불러오는 중..."):
+            series = []
             for etf_name in compare_list:
                 row = final[final["Name"] == etf_name]
                 if row.empty:
@@ -660,6 +661,12 @@ with tab3:
                     st.warning(f"{etf_name}: 데이터 없음")
                     continue
                 normalized = (hist["Close"] / hist["Close"].iloc[0]) * 100
+                series.append((etf_name, normalized, float(normalized.iloc[-1])))
+
+            # 가장 최근일 정규화 값 내림차순 정렬
+            series.sort(key=lambda s: s[2], reverse=True)
+
+            for etf_name, normalized, _ in series:
                 fig.add_trace(go.Scatter(
                     x=normalized.index,
                     y=normalized.values,
