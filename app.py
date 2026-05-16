@@ -210,25 +210,38 @@ html, body, [data-testid="stAppViewContainer"] {
     --border: rgba(0,0,0,0.08);
 }
 
-/* ── Streamlit 기본 헤더/데코 숨김 → 커스텀 헤더 사용 ── */
-header[data-testid="stHeader"] { display: none !important; }
-[data-testid="stDecoration"]   { display: none !important; }
-.main .block-container { padding-top: 0 !important; }
+/* ── Streamlit 기본 헤더/데코/툴바 숨김 → 커스텀 헤더 사용 ── */
+header[data-testid="stHeader"],
+[data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"] { display: none !important; }
+.main .block-container,
+[data-testid="stMainBlockContainer"],
+section.main > div.block-container {
+    padding-top: 0 !important;
+}
 
 /* ── 커스텀 헤더 ── */
 .app-header {
     background: #fff;
     border-bottom: 0.5px solid rgba(0,0,0,0.1);
-    padding: 24px 0 18px;
-    margin: 0 -4rem 1.5rem;
+    padding: 18px 0 14px;
+    margin: 0 -4rem 1.2rem;
     padding-left: 4rem; padding-right: 4rem;
 }
 .app-header h1 {
     font-size: 1.6rem; font-weight: 700;
-    color: #1c1c1e; letter-spacing: -0.5px; margin: 0 0 6px;
+    color: #1c1c1e; letter-spacing: -0.5px; margin: 0;
 }
-.app-header p {
-    font-size: 0.88rem; color: #8e8e93; margin: 0;
+
+/* ── 모바일 컴팩트화 ── */
+@media (max-width: 640px) {
+    .app-header {
+        padding: 10px 0 10px;
+        margin: 0 -1rem 0.8rem;
+        padding-left: 1rem; padding-right: 1rem;
+    }
+    .app-header h1 { font-size: 1.3rem; }
 }
 
 /* ── 탭 스타일 (칩 CTA) ── */
@@ -266,6 +279,19 @@ header[data-testid="stHeader"] { display: none !important; }
 .stTabs [data-baseweb="tab-border"] {
     display: none !important;
 }
+
+/* ── 스냅샷 배너 (st.success 대체, 모바일 의미 단위 줄바꿈) ── */
+.snapshot-banner {
+    background: #e8f5e9;
+    color: #1b5e20;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 0.25rem 0 1rem;
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+.snapshot-banner span { display: inline-block; white-space: nowrap; }
+.snapshot-banner .sep { color: #66bb6a; padding: 0 4px; }
 </style>
 
 <div class="app-header">
@@ -275,9 +301,13 @@ header[data-testid="stHeader"] { display: none !important; }
 
 final = load_etf_data()
 
-st.success(
-    f"총 {len(final):,}개 ETF  ·  D-1 종가 기준({final['기준일'].max()})"
-    f"  ·  스냅샷 {snapshot_mtime_kst()}"
+st.markdown(
+    f"""<div class="snapshot-banner">
+<span>총 {len(final):,}개 ETF</span><span class="sep">·</span>
+<span>D-1 종가 기준({final['기준일'].max()})</span><span class="sep">·</span>
+<span>스냅샷 {snapshot_mtime_kst()}</span>
+</div>""",
+    unsafe_allow_html=True,
 )
 
 tab1, tab2, tab3 = st.tabs(["ETF 상품 조회", "What-if 분석", "ETF 비교 차트"])
@@ -361,10 +391,10 @@ with tab2:
 
     st.markdown(
         """
-        <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;">
+        <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;word-break:keep-all;overflow-wrap:break-word;">
           <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
           <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
-            <b>총 투자금 7억</b> (미국 80% · 국내 20%) — 현금흐름 중심 커버드콜 · <b>연배당금액 최대화</b><br/>
+            <b>총 투자금 7억</b> <span style="white-space:nowrap;">(미국 80% · 국내 20%)</span> — 현금흐름 중심 <span style="white-space:nowrap;">커버드콜</span> · <b>연배당금액 최대화</b><br/>
             <br/>
             <b>선정 기준</b> (우선순위 순)<br/>
             &nbsp;&nbsp;① 세후 1Y 배당률(현재가 기준) 가중 비중 분배<br/>
@@ -436,13 +466,13 @@ with tab2:
         monthly_div = total_annual_div // 12
         total_profit_3m = df_result["주가차익(3M)"].sum()
 
-        # 요약 지표
+        # 요약 지표 (모바일에서 2x2 자동 wrap)
         summary_html = f"""
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0;">
-          <div><div style="font-size:0.85rem;color:#8e8e93;">총 투자금</div><div style="font-size:1.4rem;font-weight:700;">{total_invest:,.0f}원</div></div>
-          <div><div style="font-size:0.85rem;color:#8e8e93;">연간 배당금</div><div style="font-size:1.4rem;font-weight:700;">{total_annual_div:,.0f}원</div></div>
-          <div><div style="font-size:0.85rem;color:#8e8e93;">월 배당금</div><div style="font-size:1.4rem;font-weight:700;">{monthly_div:,.0f}원</div></div>
-          <div><div style="font-size:0.85rem;color:#8e8e93;">연간 주가차익</div><div style="font-size:1.4rem;font-weight:700;">{total_profit_3m:,.0f}원</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px 16px;margin:8px 0;">
+          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">총 투자금</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{total_invest:,.0f}원</div></div>
+          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">연간 배당금</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{total_annual_div:,.0f}원</div></div>
+          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">월 배당금</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{monthly_div:,.0f}원</div></div>
+          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">연간 주가차익</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{total_profit_3m:,.0f}원</div></div>
         </div>
         """
         st.markdown(summary_html, unsafe_allow_html=True)
