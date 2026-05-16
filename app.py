@@ -91,9 +91,14 @@ def simul(final_df, etf_name, cash):
 
 RET_COLS = {"3M수익률", "1Y수익률"}
 
-def sticky_dataframe(df, fmt=None, height=760, mobile_hide=None):
-    """mobile_hide: 모바일(<=600px)에서 숨길 원본 컬럼명 리스트."""
+def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
+    """mobile_hide: 모바일(<=600px)에서 숨길 원본 컬럼명 리스트.
+    height=None이면 행 수에 맞춰 자동 계산(데이터 적을 때 빈 iframe 공간 제거).
+    """
     orig = df.copy().reset_index(drop=True)
+    if height is None:
+        # 헤더 50px + 행당 ~34px, 최대 760px
+        height = min(50 + len(orig) * 34, 760)
     disp = df.copy().reset_index(drop=True)
     if fmt:
         for col, pattern in fmt.items():
@@ -232,6 +237,12 @@ header[data-testid="stHeader"],
 [data-testid="stMainBlockContainer"],
 section.main > div.block-container {
     padding-top: 0 !important;
+    padding-bottom: 1rem !important;
+}
+/* 컬럼 stack 간 모바일 여백 축소 */
+@media (max-width: 640px) {
+    [data-testid="stHorizontalBlock"] { gap: 0.5rem !important; }
+    [data-testid="stVerticalBlock"] { gap: 0.5rem !important; }
 }
 
 /* ── 커스텀 헤더 ── */
@@ -506,8 +517,8 @@ with tab2:
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px 16px;margin:8px 0;">
           <div><div style="{label_st}">총 투자금</div><div style="{val_sub}">{total_invest:,.0f}원</div></div>
           <div><div style="{label_st}">연간 배당금</div><div style="{val_main}">{total_annual_div:,.0f}원</div></div>
-          <div><div style="{label_st}">월 배당금</div><div style="{val_main}">{monthly_div:,.0f}원</div></div>
-          <div><div style="{label_st}">연간 주가차익</div><div style="{val_sub}">{total_profit_3m:,.0f}원</div></div>
+          <div><div style="{label_st}">월 배당금</div><div style="{val_sub}">{monthly_div:,.0f}원</div></div>
+          <div><div style="{label_st}">연간 주가차익</div><div style="{val_main}">{total_profit_3m:,.0f}원</div></div>
         </div>
         """
         st.markdown(summary_html, unsafe_allow_html=True)
