@@ -385,7 +385,7 @@ with tab1:
             .head(20)
             .reset_index(drop=True)
         )
-        sticky_dataframe(top_div[cols_div], fmt=fmt_div, mobile_hide=["시총", "주가", "배당일"])
+        sticky_dataframe(top_div[cols_div], fmt=fmt_div)
 
     with col_b:
         st.markdown("**3M 수익률 Top 20**")
@@ -397,7 +397,7 @@ with tab1:
             .head(20)
             .reset_index(drop=True)
         )
-        sticky_dataframe(top_ret[cols_ret], fmt=fmt_ret, mobile_hide=["시총", "주가"])
+        sticky_dataframe(top_ret[cols_ret], fmt=fmt_ret)
 
 
 # ── Tab 2: 투자 시뮬레이션 ───────────────────
