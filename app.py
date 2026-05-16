@@ -3,8 +3,8 @@ import streamlit.components.v1 as components
 import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
+from datetime import datetime
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor
 from warnings import filterwarnings
 
 filterwarnings("ignore")
@@ -16,100 +16,32 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────
-# 데이터 수집
+# 데이터 로드 (build_snapshot.py가 생성한 parquet 스냅샷)
 # ─────────────────────────────────────────────
 
-def fetch_etf_data(item):
-    try:
-        ticker = yf.Ticker(f"{item}.KS")
-        hist = ticker.history(period="1y", actions=True)
-
-        if hist.empty or len(hist) < 20:
-            return None
-
-        # Yahoo가 가끔 Close 전체를 NaN/0으로 돌려주는 케이스 차단
-        close = hist["Close"].dropna()
-        close = close[close > 0]
-        if len(close) < 20:
-            return None
-
-        latest_date = close.index.max()
-        three_months_ago_date = latest_date - pd.DateOffset(months=3)
-        one_year_ago_date = close.index.min()
-
-        latest_price = close.loc[close.index <= latest_date].iloc[-1]
-        three_months_ago_price = close.loc[close.index <= three_months_ago_date].iloc[-1]
-        one_year_ago_price = close.loc[close.index <= one_year_ago_date].iloc[-1]
-
-        if not (latest_price > 0 and three_months_ago_price > 0 and one_year_ago_price > 0):
-            return None
-
-        dividends = hist[hist["Dividends"] > 0]["Dividends"]
-        dividend_day = "기타"
-
-        if not dividends.empty:
-            annual_dividend = dividends.sum()
-            month_dividend = dividends.iloc[-1]
-            last_dividend_date = dividends.index[-1]
-
-            if len(dividends) >= 2:
-                dividend_term = dividends.index[-1] - dividends.index[-2]
-                if 25 <= dividend_term.days <= 35:
-                    dividend_day = "월초" if dividends.index[-1].day > 20 else "월중"
-
-            return {
-                "Symbol": item,
-                "주가": latest_price,
-                "주가_3M": three_months_ago_price,
-                "주가_1Y": one_year_ago_price,
-                "월배당금": month_dividend,
-                "연간배당금": annual_dividend,
-                "배당일": dividend_day,
-                "기준일": latest_date.strftime("%Y-%m-%d"),
-                "기준일_배당": last_dividend_date.strftime("%Y-%m-%d"),
-            }
-        else:
-            return {
-                "Symbol": item,
-                "주가": latest_price,
-                "주가_3M": three_months_ago_price,
-                "주가_1Y": one_year_ago_price,
-                "월배당금": 0,
-                "연간배당금": 0,
-                "배당일": dividend_day,
-                "기준일": latest_date.strftime("%Y-%m-%d"),
-                "기준일_배당": "",
-            }
-    except Exception:
-        return None
-
-
-ETF_LIST_CSV = Path(__file__).parent / "etf_list.csv"
+ETF_DATA_PARQUET = Path(__file__).parent / "etf_data.parquet"
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_etf_data():
-    etfs_list = pd.read_csv(ETF_LIST_CSV, dtype={"Symbol": str})
-    symbol_list = etfs_list["Symbol"].tolist()
-    symbol_list = [s for s in symbol_list if s not in {"265690"}]
+    return pd.read_parquet(ETF_DATA_PARQUET)
 
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        results = list(executor.map(fetch_etf_data, symbol_list))
 
-    data = [r for r in results if r is not None]
-    result = pd.DataFrame(data)
+def snapshot_mtime_kst() -> str:
+    try:
+        ts = ETF_DATA_PARQUET.stat().st_mtime
+        return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
+    except FileNotFoundError:
+        return "N/A"
 
-    result["1M배당률"] = (result["월배당금"] / result["주가"] * 100).round(2)
-    result["1Y배당률"] = (result["연간배당금"] / result["주가_1Y"] * 100).round(2)
-    result["3M수익률"] = ((result["주가"] - result["주가_3M"]) / result["주가_3M"] * 100).round(2)
-    result["1Y수익률"] = ((result["주가"] - result["주가_1Y"]) / result["주가_1Y"] * 100).round(2)
 
-    final = pd.merge(etfs_list, result, on="Symbol", how="inner")
-    final = final.fillna(0)
-    final = final.astype({"주가": "int32", "월배당금": "int32"})
-    final = final.rename(columns={"MarCap": "시총"})
-
-    return final
+def _history_dminus1(symbol: str, period: str) -> pd.DataFrame:
+    h = yf.Ticker(f"{symbol}.KS").history(period=period)
+    if h.empty:
+        return h
+    kst_today = pd.Timestamp.now(tz="Asia/Seoul").tz_localize(None).normalize()
+    idx = h.index.tz_localize(None) if h.index.tz is not None else h.index
+    return h.loc[idx.normalize() < kst_today]
 
 
 # ─────────────────────────────────────────────
@@ -324,10 +256,12 @@ header[data-testid="stHeader"] { display: none !important; }
 </div>
 """, unsafe_allow_html=True)
 
-with st.spinner("ETF 데이터 불러오는 중... (첫 실행 시 최대 1분 소요)"):
-    final = load_etf_data()
+final = load_etf_data()
 
-st.success(f"총 {len(final):,}개 ETF 로드 완료  |  기준일: {final['기준일'].max()}")
+st.success(
+    f"총 {len(final):,}개 ETF  ·  D-1 종가 기준({final['기준일'].max()})"
+    f"  ·  스냅샷 {snapshot_mtime_kst()}"
+)
 
 tab1, tab2, tab3 = st.tabs(["ETF 조회", "What-if 분석", "ETF 비교 차트"])
 
@@ -597,7 +531,7 @@ with tab3:
                 if row.empty:
                     continue
                 symbol = row["Symbol"].iloc[0]
-                hist = yf.Ticker(f"{symbol}.KS").history(period=period_map[period_label])
+                hist = _history_dminus1(symbol, period_map[period_label])
                 if hist.empty:
                     st.warning(f"{etf_name}: 데이터 없음")
                     continue
