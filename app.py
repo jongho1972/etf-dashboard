@@ -91,7 +91,8 @@ def simul(final_df, etf_name, cash):
 
 RET_COLS = {"3M수익률", "1Y수익률"}
 
-def sticky_dataframe(df, fmt=None, height=760):
+def sticky_dataframe(df, fmt=None, height=760, mobile_hide=None):
+    """mobile_hide: 모바일(<=600px)에서 숨길 원본 컬럼명 리스트."""
     orig = df.copy().reset_index(drop=True)
     disp = df.copy().reset_index(drop=True)
     if fmt:
@@ -102,13 +103,23 @@ def sticky_dataframe(df, fmt=None, height=760):
 
     orig_cols = list(orig.columns)
     has_symbol = "Symbol" in orig_cols
+    hide_idx = set()
+    if mobile_hide:
+        hide_idx = {orig_cols.index(c) for c in mobile_hide if c in orig_cols}
+
+    def col_class(i, orig_col):
+        parts = [f"col-{i}"]
+        if orig_col == "Symbol":
+            parts.append("etf-symbol-col")
+        if i in hide_idx:
+            parts.append("mobile-hide-col")
+        return " ".join(parts)
 
     def th(col, i, orig_col):
         pin = "position:sticky;left:0;z-index:3;" if i == 0 else "z-index:1;"
         align = "left" if i == 0 else "right"
-        cls = "etf-symbol-col" if orig_col == "Symbol" else ""
         inner = f'<div class="etf-name-text">{col}</div>' if i == 0 else col
-        return (f'<th class="{cls}" style="position:sticky;top:0;{pin}'
+        return (f'<th class="{col_class(i, orig_col)}" style="position:sticky;top:0;{pin}'
                 f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
                 f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
                 f'{inner}</th>')
@@ -121,18 +132,18 @@ def sticky_dataframe(df, fmt=None, height=760):
         tds = ""
         for i, val in enumerate(row):
             orig_col = orig_cols[i] if i < len(orig_cols) else ""
+            cls = col_class(i, orig_col)
             if i == 0:
                 if symbol:
                     onclick = f"showEtfModal('{val}','{symbol}',event.clientY)"
                 else:
                     onclick = f"alert('{val}')"
-                tds += (f'<td onclick="{onclick}" '
+                tds += (f'<td class="{cls}" onclick="{onclick}" '
                         f'style="position:sticky;left:0;background:{bg};'
                         f'padding:6px 12px;'
                         f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">'
                         f'<div class="etf-name-text">{val}</div></td>')
             else:
-                cls = "etf-symbol-col" if orig_col == "Symbol" else ""
                 color = ""
                 if orig_col in RET_COLS:
                     orig_val = orig.at[idx, orig_col]
@@ -171,9 +182,9 @@ def sticky_dataframe(df, fmt=None, height=760):
         '<style>'
         '.etf-name-text{width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
         '@media (max-width:600px){'
-        '.etf-name-text{width:140px;}'
-        '.etf-symbol-col{display:none;}'
-        '.etf-table td,.etf-table th{padding:6px 6px !important;font-size:12px !important;}'
+        '.etf-name-text{width:160px;}'
+        '.etf-symbol-col,.mobile-hide-col{display:none;}'
+        '.etf-table td,.etf-table th{padding:6px 8px !important;font-size:12.5px !important;}'
         '}'
         '</style>'
     )
@@ -206,7 +217,9 @@ html, body, [data-testid="stAppViewContainer"] {
     --accent: #007aff;
     --bg: #f5f5f7;
     --text: #1c1c1e;
-    --text-muted: #8e8e93;
+    --text-muted: #6e6e73; /* WCAG AA 4.5+ */
+    --gain: #d00000;
+    --loss: #0050d0;
     --border: rgba(0,0,0,0.08);
 }
 
@@ -253,7 +266,8 @@ section.main > div.block-container {
 }
 .stTabs [data-baseweb="tab"] {
     font-size: 15px; font-weight: 600;
-    padding: 10px 20px;
+    padding: 12px 22px;
+    min-height: 44px;
     border-radius: 999px;
     color: #1c1c1e;
     background: #f0f2f6;
@@ -278,6 +292,21 @@ section.main > div.block-container {
 .stTabs [data-baseweb="tab-highlight"],
 .stTabs [data-baseweb="tab-border"] {
     display: none !important;
+}
+
+/* ── multiselect 칩: 터치 타겟 + 표시 폭 ── */
+.stMultiSelect [data-baseweb="tag"] {
+    max-width: 200px;
+    padding: 4px 6px;
+}
+.stMultiSelect [data-baseweb="tag"] [role="button"],
+.stMultiSelect [data-baseweb="tag"] span[role="button"] {
+    min-width: 28px; min-height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 4px;
+}
+@media (max-width: 640px) {
+    .stMultiSelect [data-baseweb="tag"] { max-width: 170px; }
 }
 
 /* ── 스냅샷 배너 (st.success 대체, 모바일 의미 단위 줄바꿈) ── */
@@ -356,7 +385,7 @@ with tab1:
             .head(20)
             .reset_index(drop=True)
         )
-        sticky_dataframe(top_div[cols_div], fmt=fmt_div)
+        sticky_dataframe(top_div[cols_div], fmt=fmt_div, mobile_hide=["시총", "주가", "배당일"])
 
     with col_b:
         st.markdown("**3M 수익률 Top 20**")
@@ -368,7 +397,7 @@ with tab1:
             .head(20)
             .reset_index(drop=True)
         )
-        sticky_dataframe(top_ret[cols_ret], fmt=fmt_ret)
+        sticky_dataframe(top_ret[cols_ret], fmt=fmt_ret, mobile_hide=["시총", "주가"])
 
 
 # ── Tab 2: 투자 시뮬레이션 ───────────────────
@@ -418,10 +447,12 @@ with tab2:
             "ETF 종목": st.column_config.SelectboxColumn(
                 "ETF 종목 (수정 가능)", options=etf_names, required=True,
                 help="클릭하여 ETF 종목을 선택하세요",
+                width="medium",
             ),
             "예상 투자금 (원)": st.column_config.TextColumn(
                 "예상 투자금(원, 수정가능)",
                 help="콤마 포함 입력 가능 (예: 100,000,000)",
+                width="small",
             ),
         },
         num_rows="dynamic",
@@ -466,13 +497,17 @@ with tab2:
         monthly_div = total_annual_div // 12
         total_profit_3m = df_result["주가차익(3M)"].sum()
 
-        # 요약 지표 (모바일에서 2x2 자동 wrap)
+        # 요약 지표 (모바일 2x2 wrap, 핵심=배당금에 액센트 강조)
+        label_st = "font-size:0.82rem;color:#6e6e73;margin-bottom:4px;line-height:1.4;"
+        val_base = "font-weight:700;white-space:nowrap;line-height:1.2;"
+        val_main = val_base + "font-size:clamp(1.2rem,4.4vw,1.6rem);color:#d00000;"
+        val_sub = val_base + "font-size:clamp(1.05rem,3.8vw,1.4rem);color:#1c1c1e;"
         summary_html = f"""
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px 16px;margin:8px 0;">
-          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">총 투자금</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{total_invest:,.0f}원</div></div>
-          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">연간 배당금</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{total_annual_div:,.0f}원</div></div>
-          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">월 배당금</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{monthly_div:,.0f}원</div></div>
-          <div><div style="font-size:0.82rem;color:#8e8e93;margin-bottom:2px;">연간 주가차익</div><div style="font-size:clamp(1.05rem,3.8vw,1.4rem);font-weight:700;white-space:nowrap;">{total_profit_3m:,.0f}원</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px 16px;margin:8px 0;">
+          <div><div style="{label_st}">총 투자금</div><div style="{val_sub}">{total_invest:,.0f}원</div></div>
+          <div><div style="{label_st}">연간 배당금</div><div style="{val_main}">{total_annual_div:,.0f}원</div></div>
+          <div><div style="{label_st}">월 배당금</div><div style="{val_main}">{monthly_div:,.0f}원</div></div>
+          <div><div style="{label_st}">연간 주가차익</div><div style="{val_sub}">{total_profit_3m:,.0f}원</div></div>
         </div>
         """
         st.markdown(summary_html, unsafe_allow_html=True)
@@ -494,13 +529,24 @@ with tab2:
 
         disp_cols = list(df_with_total.columns)
         num_rows = len(df_with_total)
+        # 모바일에서 숨길 컬럼 (핵심: 종목 + 연배당금 + 월배당금 + 총수익(1Y))
+        sim_hide = {"배당일", "예상 투자금", "주식수", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)"}
+
+        def sim_class(i, col):
+            parts = [f"sim-col-{i}"]
+            if col in sim_hide:
+                parts.append("mobile-hide-col")
+            return " ".join(parts)
+
         sim_headers = ""
         for i, col in enumerate(disp_cols):
             align = "left" if i == 0 else "right"
-            sim_headers += (f'<th style="position:sticky;top:0;z-index:1;'
+            pin = "left:0;z-index:3;" if i == 0 else "z-index:1;"
+            inner = f'<div class="sim-name-text">{col}</div>' if i == 0 else col
+            sim_headers += (f'<th class="{sim_class(i, col)}" style="position:sticky;top:0;{pin}'
                             f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
                             f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
-                            f'{col}</th>')
+                            f'{inner}</th>')
         sim_rows = ""
         for idx, row in df_with_total.iterrows():
             is_total = row["종목"] == "합계"
@@ -512,15 +558,33 @@ with tab2:
                 val = row[col]
                 if col in sum_cols:
                     val = f"{int(val):,}"
-                align = "left" if i == 0 else "right"
-                tds += (f'<td style="padding:6px 12px;white-space:nowrap;background:{bg};'
-                        f'text-align:{align};font-variant-numeric:tabular-nums;'
-                        f'color:#1c1c1e;{weight}{border_top}">{val}</td>')
+                cls = sim_class(i, col)
+                if i == 0:
+                    tds += (f'<td class="{cls}" style="position:sticky;left:0;background:{bg};'
+                            f'padding:6px 12px;border-right:2px solid #ccc;'
+                            f'font-weight:{("700" if is_total else "500")};{border_top}'
+                            f'color:#1c1c1e;" title="{val}">'
+                            f'<div class="sim-name-text">{val}</div></td>')
+                else:
+                    tds += (f'<td class="{cls}" style="padding:6px 12px;white-space:nowrap;background:{bg};'
+                            f'text-align:right;font-variant-numeric:tabular-nums;'
+                            f'color:#1c1c1e;{weight}{border_top}">{val}</td>')
             sim_rows += f"<tr>{tds}</tr>"
         sim_height = min(60 + num_rows * 38, 500)
-        sim_html = (f'<div style="overflow-x:auto;overflow-y:auto;max-height:{sim_height}px;'
+        sim_style = (
+            '<style>'
+            '.sim-name-text{width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+            '@media (max-width:600px){'
+            '.sim-name-text{width:130px;}'
+            '.mobile-hide-col{display:none;}'
+            '.sim-table td,.sim-table th{padding:6px 8px !important;font-size:12.5px !important;}'
+            '}'
+            '</style>'
+        )
+        sim_html = (f'{sim_style}'
+                    f'<div style="overflow-x:auto;overflow-y:auto;max-height:{sim_height}px;'
                     f'border:1px solid #e0e0e0;border-radius:4px;">'
-                    f'<table style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
+                    f'<table class="sim-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
                     f'<thead><tr>{sim_headers}</tr></thead>'
                     f'<tbody>{sim_rows}</tbody>'
                     f'</table></div>')
