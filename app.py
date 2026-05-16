@@ -540,8 +540,8 @@ with tab2:
 
         disp_cols = list(df_with_total.columns)
         num_rows = len(df_with_total)
-        # 모바일에서 숨길 컬럼 (핵심: 종목 + 연배당금 + 월배당금 + 총수익(1Y))
-        sim_hide = {"배당일", "예상 투자금", "주식수", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)"}
+        # 모바일에서도 전체 컬럼 노출 (가로 스와이프). 종목만 sticky-left.
+        sim_hide = set()
 
         def sim_class(i, col):
             parts = [f"sim-col-{i}"]
