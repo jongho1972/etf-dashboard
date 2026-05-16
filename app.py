@@ -231,22 +231,40 @@ header[data-testid="stHeader"] { display: none !important; }
     font-size: 0.88rem; color: #8e8e93; margin: 0;
 }
 
-/* ── 탭 스타일 ── */
+/* ── 탭 스타일 (칩 CTA) ── */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 4px;
-    border-bottom: 0.5px solid rgba(0,0,0,0.1);
+    gap: 8px;
+    border-bottom: none !important;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
 }
 .stTabs [data-baseweb="tab"] {
-    font-size: 15px; font-weight: 500;
+    font-size: 15px; font-weight: 600;
     padding: 10px 20px;
-    border-radius: 0;
-    color: #8e8e93; background: transparent;
-    border: none; border-bottom: 2px solid transparent;
+    border-radius: 999px;
+    color: #1c1c1e;
+    background: #f0f2f6;
+    border: 1.5px solid transparent !important;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
 }
 .stTabs [aria-selected="true"] {
-    color: #007aff !important;
-    background: transparent !important;
-    border-bottom-color: #007aff !important;
+    color: #ffffff !important;
+    background: #ff4b4b !important;
+    border-color: #ff4b4b !important;
+    box-shadow: 0 4px 12px rgba(255, 75, 75, 0.32);
+}
+.stTabs [aria-selected="true"]:hover {
+    background: #ff3030 !important;
+}
+/* baseweb 기본 underline indicator 숨김 */
+.stTabs [data-baseweb="tab-highlight"],
+.stTabs [data-baseweb="tab-border"] {
+    display: none !important;
 }
 </style>
 
