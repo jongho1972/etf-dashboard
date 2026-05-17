@@ -2,7 +2,7 @@ name: Build ETF snapshot
 
 on:
   schedule:
-    - cron: "0 21 * * *"   # 06:00 KST (UTC+9)
+    - cron: "0 8 * * *"   # 17:00 KST (UTC+9) · 장마감(15:30 KST) 1시간 30분 후
   workflow_dispatch:
 
 concurrency:

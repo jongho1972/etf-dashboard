@@ -1,8 +1,9 @@
 """ETF 데이터 스냅샷 빌더.
 
-GitHub Actions cron(매일 06:00 KST)에서 실행되어 yfinance로 전종목 1년치를
-수집하고 `etf_data.parquet`로 저장한다. 장중 미확정 종가를 배제하기 위해
-KST 기준 D-1 종가까지만 사용한다.
+GitHub Actions cron(매일 17:00 KST)에서 실행되어 yfinance로 전종목 1년치를
+수집하고 `etf_data.parquet`로 저장한다. KRX 장마감(15:30 KST) 이후 실행 시
+당일 종가를 포함하고, 그 전(workflow_dispatch 수동 실행 등)에는 D-1까지만 사용해
+장중 미확정 종가를 배제한다.
 """
 from __future__ import annotations
 
@@ -20,17 +21,21 @@ ETF_LIST_CSV = ROOT / "etf_list.csv"
 ETF_DATA_PARQUET = ROOT / "etf_data.parquet"
 
 
-def _trim_to_dminus1(hist: pd.DataFrame) -> pd.DataFrame:
-    kst_today = pd.Timestamp.now(tz="Asia/Seoul").tz_localize(None).normalize()
+def _trim_to_confirmed_close(hist: pd.DataFrame) -> pd.DataFrame:
+    """KRX 장마감(15:30 KST) 이후면 당일 종가까지 포함, 그 전이면 D-1까지만."""
+    now_kst = pd.Timestamp.now(tz="Asia/Seoul").tz_localize(None)
+    kst_today = now_kst.normalize()
+    market_closed = now_kst >= (kst_today + pd.Timedelta(hours=15, minutes=30))
+    cutoff = kst_today if market_closed else kst_today - pd.Timedelta(days=1)
     idx = hist.index.tz_localize(None) if hist.index.tz is not None else hist.index
-    return hist.loc[idx.normalize() < kst_today]
+    return hist.loc[idx.normalize() <= cutoff]
 
 
 def fetch_etf_data(item: str):
     try:
         ticker = yf.Ticker(f"{item}.KS")
         hist = ticker.history(period="1y", actions=True)
-        hist = _trim_to_dminus1(hist)
+        hist = _trim_to_confirmed_close(hist)
 
         if hist.empty or len(hist) < 20:
             return None
@@ -117,7 +122,7 @@ def build() -> pd.DataFrame:
 def main() -> None:
     df = build()
     df.to_parquet(ETF_DATA_PARQUET, compression="snappy", index=False)
-    print(f"saved {ETF_DATA_PARQUET.name} · rows={len(df):,} · 기준일(D-1)={df['기준일'].max()}")
+    print(f"saved {ETF_DATA_PARQUET.name} · rows={len(df):,} · 기준일={df['기준일'].max()}")
 
 
 if __name__ == "__main__":

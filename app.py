@@ -35,13 +35,17 @@ def snapshot_mtime_kst() -> str:
         return "N/A"
 
 
-def _history_dminus1(symbol: str, period: str) -> pd.DataFrame:
+def _history_confirmed_close(symbol: str, period: str) -> pd.DataFrame:
+    """KRX 장마감(15:30 KST) 이후면 당일 종가까지, 그 전이면 D-1까지만."""
     h = yf.Ticker(f"{symbol}.KS").history(period=period)
     if h.empty:
         return h
-    kst_today = pd.Timestamp.now(tz="Asia/Seoul").tz_localize(None).normalize()
+    now_kst = pd.Timestamp.now(tz="Asia/Seoul").tz_localize(None)
+    kst_today = now_kst.normalize()
+    market_closed = now_kst >= (kst_today + pd.Timedelta(hours=15, minutes=30))
+    cutoff = kst_today if market_closed else kst_today - pd.Timedelta(days=1)
     idx = h.index.tz_localize(None) if h.index.tz is not None else h.index
-    return h.loc[idx.normalize() < kst_today]
+    return h.loc[idx.normalize() <= cutoff]
 
 
 # ─────────────────────────────────────────────
@@ -344,7 +348,7 @@ final = load_etf_data()
 st.markdown(
     f"""<div class="snapshot-banner">
 <span>총 {len(final):,}개 ETF</span><span class="sep">·</span>
-<span>D-1 종가 기준({final['기준일'].max()})</span><span class="sep">·</span>
+<span>종가 기준일 {final['기준일'].max()}</span><span class="sep">·</span>
 <span>스냅샷 {snapshot_mtime_kst()}</span>
 </div>""",
     unsafe_allow_html=True,
@@ -656,7 +660,7 @@ with tab3:
                 if row.empty:
                     continue
                 symbol = row["Symbol"].iloc[0]
-                hist = _history_dminus1(symbol, period_map[period_label])
+                hist = _history_confirmed_close(symbol, period_map[period_label])
                 if hist.empty:
                     st.warning(f"{etf_name}: 데이터 없음")
                     continue
