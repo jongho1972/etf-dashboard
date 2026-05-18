@@ -2,7 +2,7 @@
 
 한국 상장 ETF 전종목의 배당률·수익률 조회, What-if 투자 시뮬레이션, ETF 비교 차트를 제공하는 웹 앱입니다.
 
-**배포 URL:** https://etf.j-hawk.kr
+**배포 URL:** https://etf.jhawk.kr
 
 ---
 

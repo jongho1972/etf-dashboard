@@ -37,7 +37,7 @@ jobs:
       - name: Healthcheck
         run: |
           for i in {1..6}; do
-            if curl -fsS https://etf.j-hawk.kr/_stcore/health; then
+            if curl -fsS https://etf.jhawk.kr/_stcore/health; then
               echo "OK"; exit 0
             fi
             sleep 10
