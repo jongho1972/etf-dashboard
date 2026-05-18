@@ -2,7 +2,7 @@ name: Build ETF snapshot
 
 on:
   schedule:
-    - cron: "0 8 * * *"   # 17:00 KST (UTC+9) · 장마감(15:30 KST) 1시간 30분 후
+    - cron: "0 7 * * *"   # 16:00 KST (UTC+9) · 장마감(15:30 KST) 30분 후 · VPS cron 장애 시 fallback
   workflow_dispatch:
 
 concurrency:
