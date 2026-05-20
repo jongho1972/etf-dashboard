@@ -1,8 +1,10 @@
 name: Build ETF snapshot
 
 on:
-  schedule:
-    - cron: "0 7 * * *"   # 16:00 KST (UTC+9) · 장마감(15:30 KST) 30분 후 · VPS cron 장애 시 fallback
+  # 트리거는 j-hawk VPS cron(/etc/cron.d/etf-snapshot)이 평일 16:00 KST에
+  # GitHub REST API로 호출하는 workflow_dispatch 단일 경로로 일원화한다.
+  # (이전의 schedule: 0 7 * * * fallback은 GitHub schedule 큐 지연으로
+  #  16:00이 아닌 19시경 중복 실행되어 제거함)
   workflow_dispatch:
 
 concurrency:
