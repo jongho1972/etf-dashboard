@@ -423,14 +423,14 @@ with tab2:
     etf_names = sorted(final["Name"].tolist())
 
     default_rows = pd.DataFrame([
-        {"ETF 종목": "KODEX 미국나스닥100데일리커버드콜OTM",     "예상 투자금 (원)": "130,000,000"},
-        {"ETF 종목": "RISE 미국배당100데일리고정커버드콜",       "예상 투자금 (원)": "120,000,000"},
-        {"ETF 종목": "RISE 미국AI밸류체인데일리고정커버드콜",    "예상 투자금 (원)": "110,000,000"},
-        {"ETF 종목": "ACE 미국500데일리타겟커버드콜(합성)",      "예상 투자금 (원)": "90,000,000"},
-        {"ETF 종목": "TIGER 배당커버드콜액티브",                 "예상 투자금 (원)": "80,000,000"},
-        {"ETF 종목": "ACE KRX금현물",                            "예상 투자금 (원)": "80,000,000"},
-        {"ETF 종목": "TIGER 미국배당다우존스타겟데일리커버드콜", "예상 투자금 (원)": "70,000,000"},
-        {"ETF 종목": "ACE 미국반도체데일리타겟커버드콜(합성)",   "예상 투자금 (원)": "70,000,000"},
+        {"ETF 종목": "KODEX 미국나스닥100데일리커버드콜OTM",     "예상 투자금 (원)": "110,000,000"},
+        {"ETF 종목": "RISE 미국배당100데일리고정커버드콜",       "예상 투자금 (원)": "100,000,000"},
+        {"ETF 종목": "RISE 미국AI밸류체인데일리고정커버드콜",    "예상 투자금 (원)": "100,000,000"},
+        {"ETF 종목": "ACE 미국500데일리타겟커버드콜(합성)",      "예상 투자금 (원)": "80,000,000"},
+        {"ETF 종목": "TIGER 배당커버드콜액티브",                 "예상 투자금 (원)": "70,000,000"},
+        {"ETF 종목": "ACE KRX금현물",                            "예상 투자금 (원)": "70,000,000"},
+        {"ETF 종목": "TIGER 미국배당다우존스타겟데일리커버드콜", "예상 투자금 (원)": "60,000,000"},
+        {"ETF 종목": "ACE 미국반도체데일리타겟커버드콜(합성)",   "예상 투자금 (원)": "60,000,000"},
         {"ETF 종목": "KODEX 미국배당커버드콜액티브",             "예상 투자금 (원)": "50,000,000"},
     ])
 
@@ -439,7 +439,7 @@ with tab2:
         <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;word-break:keep-all;overflow-wrap:break-word;">
           <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
           <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
-            <b>총 투자금 8억</b> <span style="white-space:nowrap;">(미국 80% · 국내 10% · 금 10%)</span> — 현금흐름 중심 <span style="white-space:nowrap;">커버드콜</span> + <span style="white-space:nowrap;">금 헤지</span> · <b>연배당금액 최대화</b><br/>
+            <b>총 투자금 7억</b> <span style="white-space:nowrap;">(미국 80% · 국내 10% · 금 10%)</span> — 현금흐름 중심 <span style="white-space:nowrap;">커버드콜</span> + <span style="white-space:nowrap;">금 헤지</span> · <b>연배당금액 최대화</b><br/>
             <br/>
             <b>선정 기준</b> (우선순위 순)<br/>
             &nbsp;&nbsp;① 세후 1Y 배당률(현재가 기준) 가중 비중 분배<br/>
