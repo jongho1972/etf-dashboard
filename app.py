@@ -572,14 +572,22 @@ with tab2:
                 parts.append("mobile-hide-col")
             return " ".join(parts)
 
+        # 긴 헤더는 2줄로 줄바꿈해 컬럼 폭을 줄임 (모바일 가독성)
+        WRAP_HEADER = {
+            "주가차익 (3M 추세 가정)": "주가차익<br/>(3M 추세 가정)",
+            "총수익 (3M 추세 가정)": "총수익<br/>(3M 추세 가정)",
+            "주가차익 (1Y 추세 가정)": "주가차익<br/>(1Y 추세 가정)",
+            "총수익 (1Y 추세 가정)": "총수익<br/>(1Y 추세 가정)",
+        }
         sim_headers = ""
         for i, col in enumerate(disp_cols):
             align = "left" if i == 0 else "right"
             pin = "left:0;z-index:3;" if i == 0 else "z-index:1;"
-            inner = f'<div class="sim-name-text">{col}</div>' if i == 0 else col
+            head_html = WRAP_HEADER.get(col, col)
+            inner = f'<div class="sim-name-text">{head_html}</div>' if i == 0 else head_html
             sim_headers += (f'<th class="{sim_class(i, col)}" style="position:sticky;top:0;{pin}'
                             f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
-                            f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
+                            f'text-align:{align};white-space:nowrap;line-height:1.3;border-bottom:2px solid #ccc;">'
                             f'{inner}</th>')
         sim_rows = ""
         for idx, row in df_with_total.iterrows():
