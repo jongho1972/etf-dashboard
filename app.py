@@ -627,41 +627,56 @@ with tab2:
         # 참고: ETF 유형별 세제 비교 (시뮬 결과 해석용)
         st.markdown(
             """
+<style>
+.tax-tbl { border-collapse:collapse; width:100%; font-size:0.85rem; }
+.tax-tbl th, .tax-tbl td { border:1px solid #d0d3d8; padding:6px 10px; text-align:left; vertical-align:top; }
+.tax-tbl thead tr { background:#f0f2f6; }
+@media (max-width: 640px) {
+  .tax-tbl, .tax-tbl tbody, .tax-tbl tr, .tax-tbl td { display:block; width:100%; box-sizing:border-box; }
+  .tax-tbl thead { display:none; }
+  .tax-tbl tbody tr { margin-bottom:10px; border:1px solid #d0d3d8; border-radius:6px; overflow:hidden; }
+  .tax-tbl tbody td { border:none; border-bottom:1px solid #eceef1; padding:8px 10px; }
+  .tax-tbl tbody td:last-child { border-bottom:none; }
+  .tax-tbl tbody td:first-child { background:#f0f2f6; font-weight:600; }
+  .tax-tbl tbody td[data-label]::before {
+    content: attr(data-label) " · ";
+    color:#6e6e73; font-weight:600; margin-right:2px;
+  }
+}
+</style>
 <div style="margin-top:12px;font-size:0.88rem;color:#31333f;">
   <div style="font-weight:600;margin-bottom:6px;">📖 참고 — ETF 유형별 세제 비교</div>
-  <div style="overflow-x:auto;">
-  <table style="border-collapse:collapse;width:100%;min-width:520px;font-size:0.85rem;">
+  <table class="tax-tbl">
     <thead>
-      <tr style="background:#f0f2f6;">
-        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">구분</th>
-        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">국내주식형 ETF</th>
-        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">기타 ETF (국내상장, 해외·CC·금·채권 등)</th>
+      <tr>
+        <th>구분</th>
+        <th>국내주식형 ETF</th>
+        <th>기타 ETF (국내상장, 해외·CC·금·채권 등)</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">매매차익 과세</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>비과세</b></td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">배당소득세 15.4%</td>
+        <td>매매차익 과세</td>
+        <td data-label="국내주식형"><b>비과세</b></td>
+        <td data-label="기타 ETF">배당소득세 15.4%</td>
       </tr>
       <tr>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">매매차익 종합과세 합산</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상 아님</b></td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
+        <td>매매차익 종합과세 합산</td>
+        <td data-label="국내주식형"><b>합산 대상 아님</b></td>
+        <td data-label="기타 ETF"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
       </tr>
       <tr>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">분배금 과세</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">배당소득세 15.4%</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">배당소득세 15.4%</td>
+        <td>분배금 과세</td>
+        <td data-label="국내주식형">배당소득세 15.4%</td>
+        <td data-label="기타 ETF">배당소득세 15.4%</td>
       </tr>
       <tr>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">분배금 종합과세 합산</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
+        <td>분배금 종합과세 합산</td>
+        <td data-label="국내주식형"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
+        <td data-label="기타 ETF"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
       </tr>
     </tbody>
   </table>
-  </div>
   <div style="margin-top:6px;color:#6e6e73;font-size:0.78rem;">
     ※ 일반 위탁계좌 기준. 연금계좌(IRP·연금저축·DC)는 인출 시점까지 과세이연.
   </div>
