@@ -635,7 +635,7 @@ with tab2:
       <tr style="background:#f0f2f6;">
         <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">구분</th>
         <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">국내주식형 ETF</th>
-        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">기타 ETF (해외·CC·금·채권 등)</th>
+        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">기타 ETF (국내상장, 해외·CC·금·채권 등)</th>
       </tr>
     </thead>
     <tbody>
@@ -647,7 +647,7 @@ with tab2:
       <tr>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;">매매차익 종합과세 합산</td>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상 아님</b></td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (2천만원 초과 시)</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
       </tr>
       <tr>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;">분배금 과세</td>
@@ -656,8 +656,8 @@ with tab2:
       </tr>
       <tr>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;">분배금 종합과세 합산</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b></td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b></td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (금융소득 합계 2천만원 초과 시)</td>
       </tr>
     </tbody>
   </table>
