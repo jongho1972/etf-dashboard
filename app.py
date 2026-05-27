@@ -641,11 +641,11 @@ with tab2:
     <tbody>
       <tr>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;">매매차익 과세</td>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>완전 비과세</b></td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>비과세</b></td>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;">배당소득세 15.4%</td>
       </tr>
       <tr>
-        <td style="border:1px solid #d0d3d8;padding:6px 10px;">종합과세 합산</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">매매차익 종합과세 합산</td>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상 아님</b></td>
         <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (2천만원 초과 시)</td>
       </tr>
