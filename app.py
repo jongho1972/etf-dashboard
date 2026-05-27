@@ -98,10 +98,10 @@ def simul(final_df, etf_name, cash):
         "주식수": share_cnt,
         "연배당금": dividend_annual,
         "월배당금": dividend_monthly,
-        "주가차익(3M)": profit_3m,
-        "총수익(3M)": dividend_annual + profit_3m,
-        "주가차익(1Y)": profit_1y,
-        "총수익(1Y)": dividend_annual + profit_1y,
+        "주가차익 (3M 추세 가정)": profit_3m,
+        "총수익 (3M 추세 가정)": dividend_annual + profit_3m,
+        "주가차익 (1Y 추세 가정)": profit_1y,
+        "총수익 (1Y 추세 가정)": dividend_annual + profit_1y,
     }
 
 
@@ -529,7 +529,7 @@ with tab2:
         total_invest = df_result["예상 투자금"].sum()
         total_annual_div = df_result["연배당금"].sum()
         monthly_div = total_annual_div // 12
-        total_profit_3m = df_result["주가차익(3M)"].sum()
+        total_profit_3m = df_result["주가차익 (3M 추세 가정)"].sum()
 
         # 요약 지표 (모바일 2x2 wrap, 핵심=배당금에 액센트 강조)
         label_st = "font-size:0.82rem;color:#6e6e73;margin-bottom:4px;line-height:1.4;"
@@ -548,10 +548,10 @@ with tab2:
 
         st.divider()
 
-        st.caption("3M (최근 3개월 수익률 기준) / 1Y (최근 1년 수익률 기준) — 주가차익과 총수익은 이 두 기준의 범위 안에서 실현될 수 있습니다.")
+        st.caption("최근 3개월 / 1년 수익률이 향후 1년 동안 동일하게 반복된다고 가정한 결과입니다. 두 값이 예상 범위의 양 끝을 나타냅니다.")
 
         # 상세 테이블 (합계 행 포함) — HTML 렌더링
-        sum_cols = ["예상 투자금", "주식수", "연배당금", "월배당금", "주가차익(3M)", "총수익(3M)", "주가차익(1Y)", "총수익(1Y)"]
+        sum_cols = ["예상 투자금", "주식수", "연배당금", "월배당금", "주가차익 (3M 추세 가정)", "총수익 (3M 추세 가정)", "주가차익 (1Y 추세 가정)", "총수익 (1Y 추세 가정)"]
         total_row = {"종목": "합계", "배당일": ""}
         for c in sum_cols:
             if c in df_result.columns:
