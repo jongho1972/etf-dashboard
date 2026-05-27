@@ -52,6 +52,20 @@ def _history_confirmed_close(symbol: str, period: str) -> pd.DataFrame:
 # 시뮬레이션 함수
 # ─────────────────────────────────────────────
 
+# 매매차익 비과세인 국내주식형 ETF 추정 — 종목명에 해외/기타 자산 키워드가 없으면 True
+_NON_DOMESTIC_KW = (
+    "미국", "S&P500", "나스닥", "차이나", "중국", "일본", "유럽", "글로벌",
+    "인도", "대만", "베트남", "신흥국", "선진국", "월드",
+    "미국채", "국고채", "회사채", "채권", "금현물", "은현물", "골드", "원유",
+    "천연가스", "리츠", "TIPS", "달러", "엔화", "위안",
+    "커버드콜", "레버리지", "인버스", "선물", "혼합", "TRF",
+)
+
+
+def is_domestic_stock_etf(name: str) -> bool:
+    return not any(k in name for k in _NON_DOMESTIC_KW)
+
+
 def simul(final_df, etf_name, cash):
     target = final_df[final_df["Name"] == etf_name]
     if target.empty or cash <= 0:
@@ -67,11 +81,13 @@ def simul(final_df, etf_name, cash):
     dividend_annual = int(raw_dividend * (1 - 0.154))
     dividend_monthly = dividend_annual // 12
 
+    cg_tax = 0.0 if is_domestic_stock_etf(etf_name) else 0.154
+
     raw_profit_3m = price * price_pct_3m * share_cnt
-    profit_3m = int(raw_profit_3m * (1 - 0.154)) if raw_profit_3m > 0 else int(raw_profit_3m)
+    profit_3m = int(raw_profit_3m * (1 - cg_tax)) if raw_profit_3m > 0 else int(raw_profit_3m)
 
     raw_profit_1y = price * price_pct_1y * share_cnt
-    profit_1y = int(raw_profit_1y * (1 - 0.154)) if raw_profit_1y > 0 else int(raw_profit_1y)
+    profit_1y = int(raw_profit_1y * (1 - cg_tax)) if raw_profit_1y > 0 else int(raw_profit_1y)
 
     배당일 = target["배당일"].iloc[0]
 
@@ -503,10 +519,11 @@ with tab2:
         df_result = st.session_state["simul_result"]
 
         st.info(
-            "📌 현재 가격으로 투자 시, 최근 수익률 기준 예상 배당금 및 주가차익입니다.\n\n"
+            "📌 1년 보유 가정 시뮬레이션 — 최근 3개월·1년 수익률을 기준으로 한 예상 결과입니다.\n\n"
             "- 배당소득세 15.4% 적용\n"
-            "- 증권사 수수료 및 매매차익 소득세 미적용\n"
-            "- 배당금 재투자로 인한 복리효과는 반영하지 않음"
+            "- 매매차익에 15.4% 차감 (국내주식형 ETF는 매매차익 비과세 자동 반영)\n"
+            "- 증권사 매매 수수료 미적용\n"
+            "- 배당금 재투자 복리효과 미반영"
         )
 
         total_invest = df_result["예상 투자금"].sum()
@@ -629,6 +646,52 @@ with tab2:
             margin=dict(b=120),
         )
         st.plotly_chart(fig_pie, use_container_width=True)
+
+        # 참고: ETF 유형별 세제 비교 (시뮬 결과 해석용)
+        st.markdown(
+            """
+<div style="margin-top:12px;font-size:0.88rem;color:#31333f;">
+  <div style="font-weight:600;margin-bottom:6px;">📖 참고 — ETF 유형별 세제 비교</div>
+  <div style="overflow-x:auto;">
+  <table style="border-collapse:collapse;width:100%;min-width:520px;font-size:0.85rem;">
+    <thead>
+      <tr style="background:#f0f2f6;">
+        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">구분</th>
+        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">국내주식형 ETF</th>
+        <th style="border:1px solid #d0d3d8;padding:6px 10px;text-align:left;">기타 ETF (해외·CC·금·채권 등)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">매매차익 과세</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>완전 비과세</b></td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">배당소득세 15.4%</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">종합과세 합산</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상 아님</b></td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b> (2천만원 초과 시)</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">분배금 과세</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">배당소득세 15.4%</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">배당소득세 15.4%</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;">분배금 종합과세 합산</td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b></td>
+        <td style="border:1px solid #d0d3d8;padding:6px 10px;"><b>합산 대상</b></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div style="margin-top:6px;color:#6e6e73;font-size:0.78rem;">
+    ※ 일반 위탁계좌 기준. 연금계좌(IRP·연금저축·DC)는 인출 시점까지 과세이연.
+  </div>
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 # ── Tab 3: ETF 비교 차트 ─────────────────────
