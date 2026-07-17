@@ -537,7 +537,7 @@ with tab2:
         val_sub = val_base + "font-size:clamp(1.05rem,3.8vw,1.4rem);color:#1c1c1e;"
         summary_html = f"""
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px 16px;margin:8px 0;">
-          <div><div style="{label_st}">총 투자금</div><div style="{val_sub}">{total_invest:,.0f}원</div></div>
+          <div><div style="{label_st}">목표 투자금액</div><div style="{val_sub}">{total_invest:,.0f}원</div></div>
           <div><div style="{label_st}">연간 배당금</div><div style="{val_main}">{total_annual_div:,.0f}원</div></div>
           <div><div style="{label_st}">월 배당금</div><div style="{val_sub}">{monthly_div:,.0f}원</div></div>
           <div><div style="{label_st}">연간 주가차익</div><div style="{val_main}">{total_profit_3m:,.0f}원</div></div>
