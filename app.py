@@ -205,10 +205,11 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
     )
     style = (
         '<style>'
-        '.etf-name-text{width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+        '.etf-name-text{width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+        '.etf-symbol-col{display:none;}'
         '@media (max-width:600px){'
-        '.etf-name-text{width:160px;}'
-        '.etf-symbol-col,.mobile-hide-col{display:none;}'
+        '.etf-name-text{width:170px;}'
+        '.mobile-hide-col{display:none;}'
         '.etf-table td,.etf-table th{padding:6px 8px !important;font-size:12.5px !important;}'
         '}'
         '</style>'
@@ -408,7 +409,7 @@ with tab1:
 
     with col_a:
         st.markdown("**1M 배당률 Top 20**")
-        cols_div = ["Name", "월배당금", "1M배당률", "3M수익률", "시총", "주가", "배당일", "Symbol"]
+        cols_div = ["Name", "월배당금", "1M배당률", "3M수익률", "시총", "주가", "Symbol"]
         fmt_div = {k: v for k, v in fmt.items() if k in cols_div}
         top_div = (
             filtered[filtered["배당일"] != "기타"]
