@@ -440,13 +440,13 @@ with tab2:
     etf_names = sorted(final["Name"].tolist())
 
     default_rows = pd.DataFrame([
-        {"ETF 종목": "RISE 미국테크100데일리고정커버드콜",          "예상 투자금 (원)": "170,000,000"},
-        {"ETF 종목": "RISE 미국배당100데일리고정커버드콜",          "예상 투자금 (원)": "130,000,000"},
-        {"ETF 종목": "KODEX 미국S&P500데일리커버드콜OTM",           "예상 투자금 (원)": "110,000,000"},
-        {"ETF 종목": "TIGER 미국배당다우존스타겟데일리커버드콜",    "예상 투자금 (원)": "90,000,000"},
-        {"ETF 종목": "TIGER 배당커버드콜액티브",                    "예상 투자금 (원)": "70,000,000"},
+        {"ETF 종목": "RISE 미국AI밸류체인데일리고정커버드콜",       "예상 투자금 (원)": "150,000,000"},
+        {"ETF 종목": "RISE 미국테크100데일리고정커버드콜",          "예상 투자금 (원)": "140,000,000"},
+        {"ETF 종목": "RISE 미국배당100데일리고정커버드콜",          "예상 투자금 (원)": "110,000,000"},
+        {"ETF 종목": "KODEX 미국S&P500데일리커버드콜OTM",           "예상 투자금 (원)": "100,000,000"},
+        {"ETF 종목": "TIGER 미국배당다우존스타겟데일리커버드콜",    "예상 투자금 (원)": "80,000,000"},
         {"ETF 종목": "ACE KRX금현물",                               "예상 투자금 (원)": "70,000,000"},
-        {"ETF 종목": "KODEX 미국배당커버드콜액티브",                "예상 투자금 (원)": "60,000,000"},
+        {"ETF 종목": "KODEX 미국배당커버드콜액티브",                "예상 투자금 (원)": "50,000,000"},
     ])
 
     st.markdown(
@@ -454,10 +454,10 @@ with tab2:
         <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;word-break:keep-all;overflow-wrap:break-word;">
           <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
           <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
-            <b>목표 투자금액 7억</b> <span style="white-space:nowrap;">(미국 80% · 국내 10% · 금 10%)</span> — 현금흐름 중심 <span style="white-space:nowrap;">커버드콜</span> + <span style="white-space:nowrap;">금 헤지</span> · <b>연배당금액 최대화</b><br/>
+            <b>목표 투자금액 7억</b> <span style="white-space:nowrap;">(미국 90% · 금 10%)</span> — 현금흐름 중심 <span style="white-space:nowrap;">커버드콜</span> + <span style="white-space:nowrap;">금 헤지</span> · <b>연배당금액 최대화</b><br/>
             <br/>
             <b>선정 기준</b> (우선순위 순)<br/>
-            &nbsp;&nbsp;① 세후 1Y 배당률(현재가 기준) 가중 비중 분배<br/>
+            &nbsp;&nbsp;① 세후 1Y 배당률(1년 전 주가 기준) 가중 비중 분배<br/>
             &nbsp;&nbsp;② 월배당 ETF<br/>
             &nbsp;&nbsp;③ 3M 수익률 ≥ 0<br/>
             &nbsp;&nbsp;④ 시가총액 ≥ 1,000억원<br/>
