@@ -32,18 +32,29 @@ jobs:
       - name: Build snapshot (D-1 종가 기준)
         run: python build_snapshot.py
 
+      # 실패해도(대체 후보 없는 상장폐지 등) 스냅샷 커밋·배포는 계속하고, 디폴트는 기존 값 유지
+      - name: Review What-if default
+        continue-on-error: true
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_RECIPIENTS: ${{ secrets.MAIL_RECIPIENTS }}
+        run: python select_default.py --mail
+
       - name: Commit & push if changed
         id: commit
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add etf_data.parquet
+          git add etf_data.parquet default_portfolio.json
           if git diff --cached --quiet; then
             echo "No snapshot changes."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git commit -m "data: ETF 스냅샷 갱신 ($(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M))"
+          msg="data: ETF 스냅샷 갱신 ($(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M))"
+          git diff --cached --quiet -- default_portfolio.json || msg="$msg + What-if 디폴트 자동 교체"
+          git commit -m "$msg"
           git push
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 

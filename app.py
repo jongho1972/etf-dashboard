@@ -1,3 +1,5 @@
+import json
+
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
@@ -20,11 +22,17 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 
 ETF_DATA_PARQUET = Path(__file__).parent / "etf_data.parquet"
+DEFAULT_PORTFOLIO_JSON = Path(__file__).parent / "default_portfolio.json"
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_etf_data():
     return pd.read_parquet(ETF_DATA_PARQUET)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_default_portfolio() -> dict:
+    return json.loads(DEFAULT_PORTFOLIO_JSON.read_text(encoding="utf-8"))
 
 
 def snapshot_mtime_kst() -> str:
@@ -439,19 +447,15 @@ with tab2:
 
     etf_names = sorted(final["Name"].tolist())
 
+    default_cfg = load_default_portfolio()
     default_rows = pd.DataFrame([
-        {"ETF 종목": "KODEX 미국배당다우존스타겟커버드콜",          "예상 투자금 (원)": "150,000,000"},
-        {"ETF 종목": "RISE 미국배당100데일리고정커버드콜",          "예상 투자금 (원)": "150,000,000"},
-        {"ETF 종목": "KODEX 미국S&P500(H)",                       "예상 투자금 (원)": "150,000,000"},
-        {"ETF 종목": "SOL 미국배당다우존스(H)",                    "예상 투자금 (원)": "150,000,000"},
-        {"ETF 종목": "KODEX 미국S&P500",                          "예상 투자금 (원)": "150,000,000"},
-        {"ETF 종목": "TIGER 미국배당다우존스타겟커버드콜2호",       "예상 투자금 (원)": "100,000,000"},
-        {"ETF 종목": "KODEX 미국배당커버드콜액티브",                "예상 투자금 (원)": "100,000,000"},
-        {"ETF 종목": "KODEX CD금리액티브(합성)",                   "예상 투자금 (원)": "50,000,000"},
+        {"ETF 종목": slot["name"], "예상 투자금 (원)": f"{slot['amount']:,}"}
+        for slot in default_cfg["slots"]
     ])
+    last_swap = default_cfg["history"][-1]["date"] if default_cfg["history"] else "없음"
 
     st.markdown(
-        """
+        f"""
         <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;word-break:keep-all;overflow-wrap:break-word;">
           <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
           <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
@@ -465,7 +469,8 @@ with tab2:
             <b>운용 방식</b>: 분배금으로 생활비를 쓰고, 부족분은 상승장에서 일반형을 팔아 충당 · 하락장에서는 현금 버퍼 사용<br/>
             <b>선정 근거</b>: 2025-01~2026-10 연 7% 인출(10억 기준 월 약 580만원) 시뮬레이션에서 원금 유지(기존 커버드콜 전량 구성 대비 하락기 낙폭 축소)<br/>
             <b>제외</b>: 단일종목 ETF, 미국 외 해외, 가격 하락이 큰 장기국채 커버드콜<br/>
-            <b>편입 단위</b>: <span style="white-space:nowrap;">천만원 단위</span>
+            <b>편입 단위</b>: <span style="white-space:nowrap;">천만원 단위</span><br/>
+            <b>자동 점검</b>: 매 영업일 종가로 슬롯별 점검 — 필터 위반이거나 같은 계열 후보가 1Y +{default_cfg["rules"]["swap_margin_1y"]:g}%p 이상 앞설 때만 교체 (최근 교체: {last_swap})
           </div>
         </div>
         """,
