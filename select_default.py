@@ -9,6 +9,13 @@ snapshot.yml이 `build_snapshot.py` 직후 실행한다. 구조(슬롯별 컨셉
 2. 같은 풀 후보가 1Y 수익률 +swap_margin_1y 이상 앞서고, 3M도 뒤지지 않으며,
    월배당 슬롯이면 세후배당률이 div_yield_tolerance 넘게 낮지 않음
 
+분산 점검
+- 슬롯마다 실제 노출 그룹(exposure: SCHD형·S&P500형·현금)을 태그하고, 한 그룹 합계가
+  max_exposure_pct를 넘으면 안전 점검 실패로 본다 (json 수동 편집 방지용)
+- 다른 그룹 종목과 1년 주간 수익률 상관이 max_cross_corr 이상인 후보는 교체 대상에서 뺀다
+  (같은 그룹끼리 높은 상관은 의도된 구조라 보지 않음)
+- 매일 보유 종목끼리도 같은 기준으로 점검해 경고한다. 시세 조회 실패는 경고만 남긴다
+
 교체·경고가 있으면 GMAIL_* 환경변수로 메일을 보낸다. 대체 후보 없이 종목이 사라지는 등
 안전 점검에 실패하면 json을 건드리지 않고 알림 메일을 보낸 뒤 비정상 종료한다.
 """
@@ -18,10 +25,14 @@ import json
 import os
 import smtplib
 import sys
+from collections import Counter
 from email.message import EmailMessage
+from functools import cache
+from itertools import combinations
 from pathlib import Path
 
 import pandas as pd
+import yfinance as yf
 
 ROOT = Path(__file__).parent
 ETF_DATA_PARQUET = ROOT / "etf_data.parquet"
@@ -29,6 +40,7 @@ DEFAULT_JSON = ROOT / "default_portfolio.json"
 
 DIV_TAX = 0.154
 MONTHLY_LABELS = ["월초", "월중"]  # build_snapshot.py 배당일 분류
+MIN_WEEKS = 26  # 상관 계산 최소 표본(신규 상장 종목은 점검 생략)
 EXCLUDE = (
     "팔란티어|테슬라|엔비디아|애플|구글|아마존|메타|마이크로소프트|넷플릭스|퀄컴|AMD|"
     "코인베이스|마이크론|브로드컴|버크셔|TSMC|ASML|오라클|인텔|"
@@ -58,9 +70,32 @@ def beats(cand: pd.Series, inc: pd.Series, monthly: bool, rules: dict) -> bool:
     return not monthly or cand["세후배당률"] >= inc["세후배당률"] - rules["div_yield_tolerance"]
 
 
+@cache
+def weekly_returns(symbol: str) -> pd.Series | None:
+    """1년 주간 총수익률. 일간은 한·미 장 시차로 상관이 낮게 왜곡돼 주간을 쓴다."""
+    try:
+        close = yf.Ticker(f"{symbol}.KS").history(period="1y", auto_adjust=True, timeout=30)["Close"]
+    except Exception:
+        return None
+    ret = close.resample("W-FRI").last().pct_change().dropna()
+    return ret if len(ret) >= MIN_WEEKS else None
+
+
+def corr(df: pd.DataFrame, a: str, b: str) -> float | None:
+    ra = weekly_returns(df.loc[a, "Symbol"]) if a in df.index else None
+    rb = weekly_returns(df.loc[b, "Symbol"]) if b in df.index else None
+    return None if ra is None or rb is None else ra.corr(rb)
+
+
 def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
     rules = cfg["rules"]
     df = df.assign(세후배당률=df["연간배당금"] / df["주가"] * 100 * (1 - DIV_TAX)).set_index("Name")
+
+    def similar(name: str, slot: dict) -> bool:
+        """다른 노출 그룹 슬롯 종목과 상관이 max_cross_corr 이상인지."""
+        others = (s["name"] for s in cfg["slots"] if s["exposure"] != slot["exposure"])
+        return any((c := corr(df, name, o)) is not None and c >= rules["max_cross_corr"] for o in others)
+
     eligible = df[~df.index.str.contains(EXCLUDE, regex=True)]
     taken = {s["name"] for s in cfg["slots"]}
     changes, warnings = [], []
@@ -72,14 +107,15 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
 
         reason = violation(inc, slot, rules)
         if reason:
-            if candidates.empty:
+            new = next((n for n in candidates.index if not similar(n, slot)), None)
+            if new is None:
                 if inc is None:
                     raise FatalReview(f"{slot['name']}: {reason} — 대체 후보 없음, 디폴트 수동 조정 필요")
                 warnings.append(f"{slot['name']}: {reason} — 대체 후보가 없어 유지")
                 continue
-            new = candidates.index[0]
         else:
-            new = next((n for n, r in candidates.iterrows() if beats(r, inc, slot["monthly"], rules)), None)
+            new = next((n for n, r in candidates.iterrows()
+                        if beats(r, inc, slot["monthly"], rules) and not similar(n, slot)), None)
             if new is None:
                 continue
             cand = candidates.loc[new]
@@ -90,7 +126,23 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
         taken.discard(slot["name"])
         taken.add(new)
         slot["name"] = new
+
+    for a, b in combinations(cfg["slots"], 2):
+        if a["exposure"] != b["exposure"] and (c := corr(df, a["name"], b["name"])) is not None \
+                and c >= rules["max_cross_corr"]:
+            warnings.append(f"분산 저하: {a['name']}({a['exposure']}) ↔ {b['name']}({b['exposure']}) 주간 상관 {c:.2f}")
+    unchecked = [s["name"] for s in cfg["slots"]
+                 if s["name"] in df.index and weekly_returns(df.loc[s["name"], "Symbol"]) is None]
+    if unchecked:
+        warnings.append(f"상관 점검 생략(시세 조회 실패·이력 부족): {', '.join(unchecked)}")
     return changes, warnings
+
+
+def exposure_shares(cfg: dict) -> Counter:
+    shares = Counter()
+    for s in cfg["slots"]:
+        shares[s["exposure"]] += s["amount"] * 100 / cfg["total"]
+    return shares
 
 
 def validate(cfg: dict) -> None:
@@ -99,6 +151,9 @@ def validate(cfg: dict) -> None:
         raise FatalReview(f"종목 중복: {names}")
     if sum(s["amount"] for s in cfg["slots"]) != cfg["total"]:
         raise FatalReview("슬롯 금액 합계가 total과 다름")
+    limit = cfg["rules"]["max_exposure_pct"]
+    if over := {k: f"{v:g}%" for k, v in exposure_shares(cfg).items() if v > limit}:
+        raise FatalReview(f"노출 그룹 비중 상한 {limit}% 초과: {over}")
 
 
 def send_mail(subject: str, lines: list[str]) -> None:
@@ -142,6 +197,7 @@ def main() -> int:
     summary += [f"- {c['from']} → **{c['to']}** ({c['reason']})" for c in changes]
     if not changes:
         summary.append(f"- 교체 없음 ({len(cfg['slots'])}개 슬롯 모두 유지)")
+    summary.append("- 노출 그룹: " + " · ".join(f"{k} {v:g}%" for k, v in exposure_shares(cfg).most_common()))
     summary += [f"- ⚠️ {w}" for w in warnings]
     text = "\n".join(summary)
     print(text)

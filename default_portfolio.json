@@ -1,23 +1,28 @@
 {
   "total": 1000000000,
-  "rules": {"min_marcap": 1000, "swap_margin_1y": 5.0, "div_yield_tolerance": 1.0},
+  "rules": {"min_marcap": 1000, "swap_margin_1y": 5.0, "div_yield_tolerance": 1.0,
+            "max_exposure_pct": 60, "max_cross_corr": 0.9},
   "slots": [
-    {"id": "div_dow_1", "group": "분배", "pool": "미국배당다우존스.*커버드콜", "monthly": true,
+    {"id": "div_dow_1", "exposure": "SCHD형", "group": "분배", "pool": "미국배당다우존스.*커버드콜", "monthly": true,
      "amount": 150000000, "name": "KODEX 미국배당다우존스타겟커버드콜"},
-    {"id": "div_100", "group": "분배", "pool": "미국배당100.*커버드콜", "monthly": true,
+    {"id": "div_100", "exposure": "SCHD형", "group": "분배", "pool": "미국배당100.*커버드콜", "monthly": true,
      "amount": 150000000, "name": "RISE 미국배당100데일리고정커버드콜"},
-    {"id": "grow_sp500_h", "group": "성장", "pool": "^\\S+ 미국S&P500\\(H\\)$", "monthly": false,
+    {"id": "grow_sp500_h", "exposure": "S&P500형", "group": "성장", "pool": "^\\S+ 미국S&P500\\(H\\)$", "monthly": false,
      "amount": 150000000, "name": "KODEX 미국S&P500(H)"},
-    {"id": "grow_dow_h", "group": "성장", "pool": "^\\S+ 미국배당다우존스\\(H\\)$", "monthly": false,
+    {"id": "grow_dow_h", "exposure": "SCHD형", "group": "성장", "pool": "^\\S+ 미국배당다우존스\\(H\\)$", "monthly": false,
      "amount": 150000000, "name": "SOL 미국배당다우존스(H)"},
-    {"id": "grow_sp500", "group": "성장", "pool": "^\\S+ 미국S&P500$", "monthly": false,
+    {"id": "grow_sp500", "exposure": "S&P500형", "group": "성장", "pool": "^\\S+ 미국S&P500$", "monthly": false,
      "amount": 150000000, "name": "KODEX 미국S&P500"},
-    {"id": "div_dow_2", "group": "분배", "pool": "미국배당다우존스.*커버드콜", "monthly": true,
-     "amount": 100000000, "name": "TIGER 미국배당다우존스타겟커버드콜2호"},
-    {"id": "div_active", "group": "분배", "pool": "미국배당커버드콜액티브", "monthly": true,
+    {"id": "div_sp500", "exposure": "S&P500형", "group": "분배", "pool": "미국S&P500.*커버드콜", "monthly": true,
+     "amount": 100000000, "name": "TIGER 미국S&P500타겟데일리커버드콜"},
+    {"id": "div_active", "exposure": "S&P500형", "group": "분배", "pool": "미국배당커버드콜액티브", "monthly": true,
      "amount": 100000000, "name": "KODEX 미국배당커버드콜액티브"},
-    {"id": "cash_cd", "group": "완충", "pool": "^\\S+ CD금리액티브\\(합성\\)$", "monthly": false,
+    {"id": "cash_cd", "exposure": "현금", "group": "완충", "pool": "^\\S+ CD금리액티브\\(합성\\)$", "monthly": false,
      "amount": 50000000, "name": "KODEX CD금리액티브(합성)"}
   ],
-  "history": []
+  "history": [
+    {"date": "2026-10-27", "slot": "div_sp500", "group": "분배", "amount": 100000000,
+     "from": "TIGER 미국배당다우존스타겟커버드콜2호", "to": "TIGER 미국S&P500타겟데일리커버드콜",
+     "reason": "구조 개편(수동): SCHD형 55%→45% 분산, 배당다우CC와 주간 상관 0.99 중복 해소"}
+  ]
 }
