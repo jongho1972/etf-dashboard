@@ -10,10 +10,11 @@ snapshot.yml이 `build_snapshot.py` 직후 실행한다. 구조(슬롯별 컨셉
    월배당 슬롯이면 세후배당률이 div_yield_tolerance 넘게 낮지 않음
 
 분산 점검
-- 슬롯마다 실제 노출 그룹(exposure: SCHD형·S&P500형·현금)을 태그하고, 한 그룹 합계가
+- 슬롯마다 실제 노출 그룹(exposure: SCHD형·S&P500형·나스닥형·현금)을 태그하고, 한 그룹 합계가
   max_exposure_pct를 넘으면 안전 점검 실패로 본다 (json 수동 편집 방지용)
 - 다른 그룹 종목과 1년 주간 수익률 상관이 max_cross_corr 이상인 후보는 교체 대상에서 뺀다
-  (같은 그룹끼리 높은 상관은 의도된 구조라 보지 않음)
+  (같은 그룹끼리, 그리고 corr_exempt에 적은 그룹 쌍은 높은 상관이 의도된 구조라 보지 않음 —
+  나스닥형↔S&P500형은 상관 0.93이지만 그룹 한도를 맞추려고 일부러 나눈 것)
 - 매일 보유 종목끼리도 같은 기준으로 점검해 경고한다. 시세 조회 실패는 경고만 남긴다
 
 교체·경고가 있으면 GMAIL_* 환경변수로 메일을 보낸다. 대체 후보 없이 종목이 사라지는 등
@@ -91,9 +92,15 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
     rules = cfg["rules"]
     df = df.assign(세후배당률=df["연간배당금"] / df["주가"] * 100 * (1 - DIV_TAX)).set_index("Name")
 
+    exempt = {frozenset(p) for p in rules.get("corr_exempt", [])}
+
+    def cross(a: str, b: str) -> bool:
+        """상관 점검 대상인 그룹 쌍인지."""
+        return a != b and frozenset((a, b)) not in exempt
+
     def similar(name: str, slot: dict) -> bool:
-        """다른 노출 그룹 슬롯 종목과 상관이 max_cross_corr 이상인지."""
-        others = (s["name"] for s in cfg["slots"] if s["exposure"] != slot["exposure"])
+        """점검 대상 그룹 슬롯 종목과 상관이 max_cross_corr 이상인지."""
+        others = (s["name"] for s in cfg["slots"] if cross(s["exposure"], slot["exposure"]))
         return any((c := corr(df, name, o)) is not None and c >= rules["max_cross_corr"] for o in others)
 
     eligible = df[~df.index.str.contains(EXCLUDE, regex=True)]
@@ -128,7 +135,7 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
         slot["name"] = new
 
     for a, b in combinations(cfg["slots"], 2):
-        if a["exposure"] != b["exposure"] and (c := corr(df, a["name"], b["name"])) is not None \
+        if cross(a["exposure"], b["exposure"]) and (c := corr(df, a["name"], b["name"])) is not None \
                 and c >= rules["max_cross_corr"]:
             warnings.append(f"분산 저하: {a['name']}({a['exposure']}) ↔ {b['name']}({b['exposure']}) 주간 상관 {c:.2f}")
     unchecked = [s["name"] for s in cfg["slots"]
