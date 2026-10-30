@@ -459,19 +459,10 @@ with tab2:
         <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;word-break:keep-all;overflow-wrap:break-word;">
           <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
           <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
-            <b>목표 투자금액 10억</b> — 은퇴 후 <b>금융소득 현금흐름</b> · <b>하락장 원금 방어</b><br/>
-            <br/>
-            <b>구성</b> (2026-10-28 개편)<br/>
-            &nbsp;&nbsp;① 분배 51% — 미국 커버드콜 (배당100·배당다우존스·나스닥100·S&amp;P500 2종)<br/>
-            &nbsp;&nbsp;② 성장 44% — 일반형 S&amp;P500·배당다우존스, 환헤지(H)<br/>
-            &nbsp;&nbsp;③ 완충 5% — 원화 CD금리 (하락장 생활비 버퍼)<br/>
-            <br/>
-            <b>운용 방식</b>: 분배금(세후 월 약 730만원)을 전액 생활비로 쓰고, 하락장에서 부족하면 현금 버퍼 사용<br/>
-            <b>선정 근거</b>: 2025-01~2026-10 분배금 전액 인출 시 원금 유지 · 2026-07 이후 하락기 손실을 기존 구성 수준(약 −5%) 이내로 묶는 조건에서 세후 분배금 최대화<br/>
-            <b>제외</b>: 단일종목 ETF, 미국 외 해외, 가격 하락이 큰 장기국채 커버드콜<br/>
-            <b>편입 단위</b>: <span style="white-space:nowrap;">천만원 단위</span><br/>
-            <b>자동 점검</b>: 매 영업일 종가로 슬롯별 점검 — 필터 위반이거나 같은 계열 후보가 1Y +{default_cfg["rules"]["swap_margin_1y"]:g}%p 이상 앞설 때만 교체 (최근 교체: {last_swap})<br/>
-            <b>분산 점검</b>: 실제 노출(SCHD형·S&amp;P500형·나스닥형·현금) 한 그룹 {default_cfg["rules"]["max_exposure_pct"]}% 이하 · 다른 그룹 종목과 주간 상관 {default_cfg["rules"]["max_cross_corr"]:g} 이상인 후보는 교체 제외(나스닥형↔S&amp;P500형은 예외)
+            <b>목표 10억</b> — 은퇴 후 <b>현금흐름</b> · <b>하락장 원금 방어</b><br/>
+            <b>구성</b>: 분배 48% (미국 커버드콜) · 성장 47% (S&amp;P500·배당다우존스) · 완충 5% (CD금리)<br/>
+            <b>운용</b>: 세후 월 약 800만원 분배금을 생활비로 쓰고, 하락장엔 현금 버퍼 사용<br/>
+            <b>점검</b>: 매 영업일 자동 점검, 기준 미달 시에만 교체 (최근 교체: {last_swap})
           </div>
         </div>
         """,
