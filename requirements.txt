@@ -1,5 +1,6 @@
-streamlit>=1.35.0
-pandas>=2.0.0
-yfinance>=0.2.55
-plotly>=5.20.0
-pyarrow>=15.0.0
+# 버전 고정: 무제한 핀(>=)은 빌드 시점마다 메이저 버전이 바뀌어 조용한 데이터 오류를 낸 이력이 있음
+streamlit==1.52.2
+pandas==3.0.2
+yfinance==0.2.66
+plotly==6.3.1
+pyarrow==22.0.0

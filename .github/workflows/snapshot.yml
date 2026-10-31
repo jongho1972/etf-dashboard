@@ -29,7 +29,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Build snapshot (D-1 종가 기준)
+      # 시총·신규 상장·상장폐지 반영. 네이버 차단 등으로 실패하면 기존 목록으로 계속 진행하고
+      # select_default.py가 메일로 경고한다
+      - name: Update ETF list
+        id: list
+        continue-on-error: true
+        run: python update_etf_list.py
+
+      # 수집률 95% 미만이면 비정상 종료 → 기존 스냅샷 유지(커밋·배포 안 함)
+      - name: Build snapshot (확정 종가 기준)
         run: python build_snapshot.py
 
       # 실패해도(대체 후보 없는 상장폐지 등) 스냅샷 커밋·배포는 계속하고, 디폴트는 기존 값 유지
@@ -39,6 +47,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_RECIPIENTS: ${{ secrets.MAIL_RECIPIENTS }}
+          LIST_UPDATE_OUTCOME: ${{ steps.list.outcome }}
         run: python select_default.py --mail
 
       - name: Commit & push if changed
@@ -46,7 +55,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add etf_data.parquet default_portfolio.json
+          git add etf_data.parquet default_portfolio.json etf_list.csv snapshot_report.json
           if git diff --cached --quiet; then
             echo "No snapshot changes."
             echo "pushed=false" >> "$GITHUB_OUTPUT"

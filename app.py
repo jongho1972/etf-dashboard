@@ -1,3 +1,4 @@
+import html
 import json
 
 import streamlit as st
@@ -6,8 +7,10 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 from datetime import datetime
-from pathlib import Path
 from warnings import filterwarnings
+
+from build_snapshot import ETF_DATA_PARQUET, _trim_to_confirmed_close
+from select_default import DEFAULT_JSON, exposure_shares
 
 filterwarnings("ignore")
 
@@ -21,8 +24,6 @@ st.set_page_config(
 # 데이터 로드 (build_snapshot.py가 생성한 parquet 스냅샷)
 # ─────────────────────────────────────────────
 
-ETF_DATA_PARQUET = Path(__file__).parent / "etf_data.parquet"
-DEFAULT_PORTFOLIO_JSON = Path(__file__).parent / "default_portfolio.json"
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -32,7 +33,7 @@ def load_etf_data():
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_default_portfolio() -> dict:
-    return json.loads(DEFAULT_PORTFOLIO_JSON.read_text(encoding="utf-8"))
+    return json.loads(DEFAULT_JSON.read_text(encoding="utf-8"))
 
 
 def snapshot_mtime_kst() -> str:
@@ -48,12 +49,9 @@ def _history_confirmed_close(symbol: str, period: str) -> pd.DataFrame:
     h = yf.Ticker(f"{symbol}.KS").history(period=period)
     if h.empty:
         return h
-    now_kst = pd.Timestamp.now(tz="Asia/Seoul").tz_localize(None)
-    kst_today = now_kst.normalize()
-    market_closed = now_kst >= (kst_today + pd.Timedelta(hours=15, minutes=30))
-    cutoff = kst_today if market_closed else kst_today - pd.Timedelta(days=1)
-    idx = h.index.tz_localize(None) if h.index.tz is not None else h.index
-    return h.loc[idx.normalize() <= cutoff]
+    if h.index.tz is not None:
+        h.index = h.index.tz_localize(None)
+    return _trim_to_confirmed_close(h)
 
 
 # ─────────────────────────────────────────────
@@ -395,13 +393,15 @@ with tab1:
     with col3:
         keyword = st.text_input("종목명 키워드")
 
-    cols_show = ["Symbol", "Name", "시총", "주가", "월배당금", "1M배당률", "1Y배당률", "1Y수익률", "3M수익률", "배당일"]
+    cols_show = ["Symbol", "Name", "시총", "주가", "월배당금", "1M배당률", "1Y배당률", "1Y수익률", "3M수익률", "배당일", "상장1Y미만"]
     filtered = final[final["시총"] > min_marcap][cols_show].copy()
 
     if div_filter != "전체":
         filtered = filtered[filtered["배당일"] == div_filter]
     if keyword:
         filtered = filtered[filtered["Name"].str.contains(keyword, na=False)]
+    # 상장 1년 미만: 1Y 값이 상장일 이후 기준·배당은 연환산이라 표시 (화면용 이름만 변경)
+    filtered.loc[filtered["상장1Y미만"], "Name"] = "* " + filtered.loc[filtered["상장1Y미만"], "Name"]
 
     fmt = {
         "시총": "{:,.0f}",
@@ -439,6 +439,11 @@ with tab1:
         )
         sticky_dataframe(top_ret[cols_ret], fmt=fmt_ret)
 
+    st.caption(
+        "수익률은 배당을 뺀 가격 변동, 배당률은 최근 1년 지급액 ÷ 현재 주가입니다. "
+        "\\* 상장 1년 미만 종목은 1Y 값이 상장일 이후 기준이고 연간배당은 연환산입니다."
+    )
+
 
 # ── Tab 2: 투자 시뮬레이션 ───────────────────
 
@@ -453,6 +458,14 @@ with tab2:
         for slot in default_cfg["slots"]
     ])
     last_swap = default_cfg["history"][-1]["date"] if default_cfg["history"] else "없음"
+    # 안내 문구 수치는 스냅샷으로 매일 다시 계산 (하드코딩하면 데이터·교체와 어긋남)
+    default_monthly = sum(r["월배당금"] for s in default_cfg["slots"]
+                          if (r := simul(final, s["name"], s["amount"])))
+    group_desc = default_cfg.get("group_desc", {})
+    composition = " · ".join(
+        f"{g} {p:.0f}%" + (f" ({html.escape(group_desc[g])})" if g in group_desc else "")
+        for g, p in exposure_shares(default_cfg, key="group").items()
+    )
 
     st.markdown(
         f"""
@@ -460,8 +473,8 @@ with tab2:
           <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
           <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
             <b>목표 10억</b> — 은퇴 후 <b>현금흐름</b> · <b>하락장 원금 방어</b><br/>
-            <b>구성</b>: 분배 48% (미국 커버드콜) · 성장 47% (S&amp;P500·배당다우존스) · 완충 5% (CD금리)<br/>
-            <b>운용</b>: 세후 월 약 800만원 분배금을 생활비로 쓰고, 하락장엔 현금 버퍼 사용<br/>
+            <b>구성</b>: {composition}<br/>
+            <b>운용</b>: 세후 월 약 {default_monthly / 10_000:,.0f}만원 분배금(최근 1년 지급액 기준)을 생활비로 쓰고, 하락장엔 현금 버퍼 사용<br/>
             <b>점검</b>: 매 영업일 자동 점검, 기준 미달 시에만 교체 (최근 교체: {last_swap})
           </div>
         </div>
@@ -486,7 +499,7 @@ with tab2:
             ),
         },
         num_rows="dynamic",
-        use_container_width=True,
+        width="stretch",
     )
 
     # What-if 종목 목록이 바뀌면 비교 차트 탭 디폴트도 동기화
@@ -517,6 +530,7 @@ with tab2:
 
         st.info(
             "📌 1년 보유 가정 시뮬레이션 — 최근 3개월·1년 수익률을 기준으로 한 예상 결과입니다.\n\n"
+            "- 배당금은 최근 1년(연 지급 횟수만큼) 실제 지급액, 주가차익은 배당을 뺀 순수 가격 변동\n"
             "- 배당소득세 15.4% 적용\n"
             "- 매매차익에 15.4% 차감 (국내주식형 ETF는 매매차익 비과세 자동 반영)\n"
             "- 증권사 매매 수수료 미적용\n"
@@ -750,7 +764,7 @@ with tab3:
                 margin=dict(b=160),
                 height=580,
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.error("차트에 표시할 데이터가 없습니다.")
 

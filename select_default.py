@@ -6,7 +6,7 @@ snapshot.yml이 `build_snapshot.py` 직후 실행한다. 구조(슬롯별 컨셉
 
 교체 조건 (둘 중 하나)
 1. 보유 종목이 필터 위반: 스냅샷에 없음 · 시총 미달 · 월배당 슬롯인데 월배당 아님
-2. 같은 풀 후보가 1Y 수익률 +swap_margin_1y 이상 앞서고, 3M도 뒤지지 않으며,
+2. 같은 풀 후보가 1Y 총수익률(배당 포함) +swap_margin_1y 이상 앞서고, 3M도 뒤지지 않으며,
    월배당 슬롯이면 세후배당률이 div_yield_tolerance 넘게 낮지 않음
 
 분산 점검
@@ -16,6 +16,9 @@ snapshot.yml이 `build_snapshot.py` 직후 실행한다. 구조(슬롯별 컨셉
   (같은 그룹끼리, 그리고 corr_exempt에 적은 그룹 쌍은 높은 상관이 의도된 구조라 보지 않음 —
   나스닥형↔S&P500형은 상관 0.93이지만 그룹 한도를 맞추려고 일부러 나눈 것)
 - 매일 보유 종목끼리도 같은 기준으로 점검해 경고한다. 시세 조회 실패는 경고만 남긴다
+
+데이터 점검: 스냅샷에서 빠진 시총 min_marcap 이상 종목(snapshot_report.json)과
+ETF 목록 갱신 실패(LIST_UPDATE_OUTCOME)도 경고에 넣는다.
 
 교체·경고가 있으면 GMAIL_* 환경변수로 메일을 보낸다. 대체 후보 없이 종목이 사라지는 등
 안전 점검에 실패하면 json을 건드리지 않고 알림 메일을 보낸 뒤 비정상 종료한다.
@@ -35,8 +38,8 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
-ROOT = Path(__file__).parent
-ETF_DATA_PARQUET = ROOT / "etf_data.parquet"
+from build_snapshot import ETF_DATA_PARQUET, REPORT_JSON, ROOT
+
 DEFAULT_JSON = ROOT / "default_portfolio.json"
 
 DIV_TAX = 0.154
@@ -64,9 +67,9 @@ def violation(row: pd.Series | None, slot: dict, rules: dict) -> str | None:
 
 
 def beats(cand: pd.Series, inc: pd.Series, monthly: bool, rules: dict) -> bool:
-    if cand["1Y수익률"] - inc["1Y수익률"] < rules["swap_margin_1y"]:
+    if cand["1Y총수익률"] - inc["1Y총수익률"] < rules["swap_margin_1y"]:
         return False
-    if cand["3M수익률"] < inc["3M수익률"]:
+    if cand["3M총수익률"] < inc["3M총수익률"]:
         return False
     return not monthly or cand["세후배당률"] >= inc["세후배당률"] - rules["div_yield_tolerance"]
 
@@ -110,7 +113,7 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
         pool = eligible[eligible.index.str.contains(slot["pool"], regex=True)]
         inc = df.loc[slot["name"]] if slot["name"] in df.index else None
         keep = [n for n, r in pool.iterrows() if n not in taken and violation(r, slot, rules) is None]
-        candidates = pool.loc[keep].sort_values("1Y수익률", ascending=False)
+        candidates = pool.loc[keep].sort_values("1Y총수익률", ascending=False)
 
         reason = violation(inc, slot, rules)
         if reason:
@@ -126,8 +129,8 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
             if new is None:
                 continue
             cand = candidates.loc[new]
-            reason = (f"1Y {cand['1Y수익률']:+.2f}% vs {inc['1Y수익률']:+.2f}% · "
-                      f"3M {cand['3M수익률']:+.2f}% vs {inc['3M수익률']:+.2f}%")
+            reason = (f"1Y 총수익 {cand['1Y총수익률']:+.2f}% vs {inc['1Y총수익률']:+.2f}% · "
+                      f"3M {cand['3M총수익률']:+.2f}% vs {inc['3M총수익률']:+.2f}%")
         changes.append({"slot": slot["id"], "group": slot["group"], "amount": slot["amount"],
                         "from": slot["name"], "to": new, "reason": reason})
         taken.discard(slot["name"])
@@ -145,10 +148,25 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
     return changes, warnings
 
 
-def exposure_shares(cfg: dict) -> Counter:
+def data_warnings(min_marcap: int) -> list[str]:
+    """스냅샷 누락(대형 종목)·ETF 목록 갱신 실패."""
+    out = []
+    if os.environ.get("LIST_UPDATE_OUTCOME", "success") != "success":
+        out.append("ETF 목록(etf_list.csv) 자동 갱신 실패 — 시총·신규 상장이 이전 값으로 유지됨")
+    if REPORT_JSON.exists():
+        report = json.loads(REPORT_JSON.read_text(encoding="utf-8"))
+        big = [m for m in report["누락"] if m["시총"] >= min_marcap]
+        if big:
+            names = ", ".join(f"{m['Name']}({m['시총']:,}억)" for m in big[:5])
+            out.append(f"스냅샷 누락 {len(report['누락'])}종 중 시총 {min_marcap:,}억 이상 {len(big)}종: {names}")
+    return out
+
+
+def exposure_shares(cfg: dict, key: str = "exposure") -> Counter:
+    """슬롯 key(exposure·group)별 비중(%). app.py 안내 박스도 같은 함수를 쓴다."""
     shares = Counter()
     for s in cfg["slots"]:
-        shares[s["exposure"]] += s["amount"] * 100 / cfg["total"]
+        shares[s[key]] += s["amount"] * 100 / cfg["total"]
     return shares
 
 
@@ -190,6 +208,7 @@ def main() -> int:
     try:
         changes, warnings = review(df, cfg)
         validate(cfg)
+        warnings += data_warnings(cfg["rules"]["min_marcap"])
     except FatalReview as e:
         print(f"디폴트 점검 중단: {e}")
         if mail:
