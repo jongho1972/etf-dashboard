@@ -14,6 +14,10 @@ from select_default import DEFAULT_JSON, exposure_shares
 
 filterwarnings("ignore")
 
+# 앱 본문 폰트는 .streamlit/config.toml, iframe 표와 차트는 아래 값으로 지정한다.
+FONT_STACK = "Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+FONT_LINK = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">'
+
 st.set_page_config(
     page_title="ETF 투자 가이드",
     page_icon="📈",
@@ -189,7 +193,7 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
         'background:rgba(0,0,0,0.4);z-index:9999;">'
         '<div id="etf-modal-box" style="position:absolute;left:50%;transform:translateX(-50%);top:80px;'
         'background:white;padding:20px 18px 16px;border-radius:14px;min-width:260px;max-width:80%;'
-        'box-shadow:0 8px 32px rgba(0,0,0,0.2);font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
+        f'box-shadow:0 8px 32px rgba(0,0,0,0.2);font-family:{FONT_STACK};">'
         '<div id="etf-modal-name" style="font-size:15px;font-weight:600;color:#1c1c1e;margin-bottom:16px;'
         'text-align:center;word-break:keep-all;line-height:1.4;"></div>'
         '<div style="display:flex;gap:8px;">'
@@ -220,10 +224,10 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
         '}'
         '</style>'
     )
-    html = (f'{style}{modal}'
+    html = (f'{FONT_LINK}{style}{modal}'
             f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
             f'border:1px solid #e0e0e0;border-radius:4px;">'
-            f'<table class="etf-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
+            f'<table class="etf-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:{FONT_STACK};">'
             f'<thead><tr>{headers}</tr></thead>'
             f'<tbody>{rows}</tbody>'
             f'</table></div>')
@@ -634,10 +638,10 @@ with tab2:
             '}'
             '</style>'
         )
-        sim_html = (f'{sim_style}'
+        sim_html = (f'{FONT_LINK}{sim_style}'
                     f'<div style="overflow-x:auto;overflow-y:auto;max-height:{sim_height}px;'
                     f'border:1px solid #e0e0e0;border-radius:4px;">'
-                    f'<table class="sim-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:-apple-system,BlinkMacSystemFont,\'Noto Sans KR\',sans-serif;">'
+                    f'<table class="sim-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:{FONT_STACK};">'
                     f'<thead><tr>{sim_headers}</tr></thead>'
                     f'<tbody>{sim_rows}</tbody>'
                     f'</table></div>')
@@ -757,6 +761,7 @@ with tab3:
             fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.4)
             fig.update_layout(
                 title=f"ETF 주가 추이 비교 ({period_label}, 시작=100)",
+                font_family=FONT_STACK,
                 xaxis_title="날짜",
                 yaxis_title="정규화 주가",
                 hovermode="x unified",
