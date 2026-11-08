@@ -25,6 +25,22 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_RECIPIENTS: ${{ secrets.MAIL_RECIPIENTS }}
         run: |
+          # 값은 출력하지 않고 형태만 진단한다
+          python - <<'EOF'
+          import os, smtplib, traceback
+          u, p = os.environ["GMAIL_USER"], os.environ["GMAIL_APP_PASSWORD"]
+          r = os.environ["MAIL_RECIPIENTS"]
+          pw = "".join(p.split())
+          print(f"user len={len(u)} stripped_len={len(u.strip())} has_at={'@' in u}")
+          print(f"recipients len={len(r)} stripped_len={len(r.strip())}")
+          print(f"pw raw_len={len(p)} nospace_len={len(pw)} ascii_alpha={pw.isascii() and pw.isalpha()}")
+          try:
+              with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as s:
+                  s.set_debuglevel(0)
+                  print("login:", s.login(u.strip(), pw)[0])
+          except Exception:
+              traceback.print_exc()
+          EOF
           python -c "from select_default import send_mail; send_mail('[ETF] 디폴트 점검 메일 시험', ['디폴트 자동 점검 메일 설정(GMAIL_* 시크릿) 확인용 시험 메일입니다.', '이 메일이 보이면 실제 교체·경고 알림도 정상 발송됩니다.'])" | tee out.txt
           # send_mail은 실패해도 예외를 삼키므로 출력으로 판정한다
           ! grep -qE "실패|설정 없음" out.txt
