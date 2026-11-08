@@ -17,8 +17,9 @@ snapshot.yml이 `build_snapshot.py` 직후 실행한다. 구조(슬롯별 컨셉
   나스닥형↔S&P500형은 상관 0.93이지만 그룹 한도를 맞추려고 일부러 나눈 것)
 - 매일 보유 종목끼리도 같은 기준으로 점검해 경고한다. 시세 조회 실패는 경고만 남긴다
 
-데이터 점검: 스냅샷에서 빠진 시총 min_marcap 이상 종목(snapshot_report.json)과
-ETF 목록 갱신 실패(LIST_UPDATE_OUTCOME)도 경고에 넣는다.
+데이터 점검: ETF 목록 갱신 실패(LIST_UPDATE_OUTCOME)와, 스냅샷에서 빠진 시총 min_marcap 이상
+종목(snapshot_report.json) 중 슬롯 후보 풀에 드는 것만 경고에 넣는다. 디폴트와 무관한 누락은
+실행 요약에만 참고로 남기고 메일은 보내지 않는다.
 
 교체·경고가 있으면 GMAIL_* 환경변수로 메일을 보낸다. 대체 후보 없이 종목이 사라지는 등
 안전 점검에 실패하면 json을 건드리지 않고 알림 메일을 보낸 뒤 비정상 종료한다.
@@ -91,6 +92,11 @@ def corr(df: pd.DataFrame, a: str, b: str) -> float | None:
     return None if ra is None or rb is None else ra.corr(rb)
 
 
+def in_pool(names: pd.Index, slot: dict) -> pd.Series:
+    """슬롯 교체 후보가 될 수 있는 이름인지(EXCLUDE 제외 + 슬롯 pool 정규식). review·data_warnings 공용."""
+    return ~names.str.contains(EXCLUDE, regex=True) & names.str.contains(slot["pool"], regex=True)
+
+
 def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
     rules = cfg["rules"]
     df = df.assign(세후배당률=df["연간배당금"] / df["주가"] * 100 * (1 - DIV_TAX)).set_index("Name")
@@ -106,11 +112,10 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
         others = (s["name"] for s in cfg["slots"] if cross(s["exposure"], slot["exposure"]))
         return any((c := corr(df, name, o)) is not None and c >= rules["max_cross_corr"] for o in others)
 
-    eligible = df[~df.index.str.contains(EXCLUDE, regex=True)]
     taken = {s["name"] for s in cfg["slots"]}
     changes, warnings = [], []
     for slot in cfg["slots"]:
-        pool = eligible[eligible.index.str.contains(slot["pool"], regex=True)]
+        pool = df[in_pool(df.index, slot)]
         inc = df.loc[slot["name"]] if slot["name"] in df.index else None
         keep = [n for n, r in pool.iterrows() if n not in taken and violation(r, slot, rules) is None]
         candidates = pool.loc[keep].sort_values("1Y총수익률", ascending=False)
@@ -148,18 +153,30 @@ def review(df: pd.DataFrame, cfg: dict) -> tuple[list[dict], list[str]]:
     return changes, warnings
 
 
-def data_warnings(min_marcap: int) -> list[str]:
-    """스냅샷 누락(대형 종목)·ETF 목록 갱신 실패."""
-    out = []
+def data_warnings(cfg: dict) -> tuple[list[str], list[str]]:
+    """(경고, 참고). 경고=ETF 목록 갱신 실패·슬롯 후보 풀 종목의 스냅샷 누락(메일 대상),
+    참고=디폴트와 무관한 대형 종목 누락(실행 요약에만)."""
+    warnings, notes = [], []
     if os.environ.get("LIST_UPDATE_OUTCOME", "success") != "success":
-        out.append("ETF 목록(etf_list.csv) 자동 갱신 실패 — 시총·신규 상장이 이전 값으로 유지됨")
-    if REPORT_JSON.exists():
-        report = json.loads(REPORT_JSON.read_text(encoding="utf-8"))
-        big = [m for m in report["누락"] if m["시총"] >= min_marcap]
-        if big:
-            names = ", ".join(f"{m['Name']}({m['시총']:,}억)" for m in big[:5])
-            out.append(f"스냅샷 누락 {len(report['누락'])}종 중 시총 {min_marcap:,}억 이상 {len(big)}종: {names}")
-    return out
+        warnings.append("ETF 목록(etf_list.csv) 자동 갱신 실패 — 시총·신규 상장이 이전 값으로 유지됨")
+    if not REPORT_JSON.exists():
+        return warnings, notes
+    min_marcap = cfg["rules"]["min_marcap"]
+    big = pd.DataFrame([m for m in json.loads(REPORT_JSON.read_text(encoding="utf-8"))["누락"]
+                        if m["시총"] >= min_marcap], columns=["Name", "시총"])
+    hit = pd.Series(False, index=big.index)
+    for slot in cfg["slots"]:
+        hit |= in_pool(big["Name"], slot)
+    related, others = big[hit], big[~hit]
+    if len(related):
+        warnings.append(f"디폴트 교체 후보 {len(related)}종이 스냅샷에서 빠져 비교 못 함: {_fmt_missing(related)}")
+    if len(others):
+        notes.append(f"스냅샷 누락 중 시총 {min_marcap:,}억 이상 {len(others)}종(디폴트 무관): {_fmt_missing(others)}")
+    return warnings, notes
+
+
+def _fmt_missing(rows: pd.DataFrame) -> str:
+    return ", ".join(f"{r.Name}({r.시총:,}억)" for r in rows.head(5).itertuples())
 
 
 def exposure_shares(cfg: dict, key: str = "exposure") -> Counter:
@@ -208,7 +225,8 @@ def main() -> int:
     try:
         changes, warnings = review(df, cfg)
         validate(cfg)
-        warnings += data_warnings(cfg["rules"]["min_marcap"])
+        data_warn, notes = data_warnings(cfg)
+        warnings += data_warn
     except FatalReview as e:
         print(f"디폴트 점검 중단: {e}")
         if mail:
@@ -225,6 +243,7 @@ def main() -> int:
         summary.append(f"- 교체 없음 ({len(cfg['slots'])}개 슬롯 모두 유지)")
     summary.append("- 노출 그룹: " + " · ".join(f"{k} {v:g}%" for k, v in exposure_shares(cfg).most_common()))
     summary += [f"- ⚠️ {w}" for w in warnings]
+    summary += [f"- 참고: {n}" for n in notes]
     text = "\n".join(summary)
     print(text)
     if path := os.environ.get("GITHUB_STEP_SUMMARY"):
