@@ -39,13 +39,12 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
-from build_snapshot import ETF_DATA_PARQUET, REPORT_JSON, ROOT
+from build_snapshot import ETF_DATA_PARQUET, MIN_WEEKS, REPORT_JSON, ROOT, to_weekly_returns
 
 DEFAULT_JSON = ROOT / "default_portfolio.json"
 
 DIV_TAX = 0.154
 MONTHLY_LABELS = ["월초", "월중"]  # build_snapshot.py 배당일 분류
-MIN_WEEKS = 26  # 상관 계산 최소 표본(신규 상장 종목은 점검 생략)
 EXCLUDE = (
     "팔란티어|테슬라|엔비디아|애플|구글|아마존|메타|마이크로소프트|넷플릭스|퀄컴|AMD|"
     "코인베이스|마이크론|브로드컴|버크셔|TSMC|ASML|오라클|인텔|"
@@ -77,12 +76,12 @@ def beats(cand: pd.Series, inc: pd.Series, monthly: bool, rules: dict) -> bool:
 
 @cache
 def weekly_returns(symbol: str) -> pd.Series | None:
-    """1년 주간 총수익률. 일간은 한·미 장 시차로 상관이 낮게 왜곡돼 주간을 쓴다."""
+    """1년 주간 총수익률. 표본이 MIN_WEEKS 미만(신규 상장)이면 None — 점검 생략."""
     try:
         close = yf.Ticker(f"{symbol}.KS").history(period="1y", auto_adjust=True, timeout=30)["Close"]
     except Exception:
         return None
-    ret = close.resample("W-FRI").last().pct_change().dropna()
+    ret = to_weekly_returns(close)
     return ret if len(ret) >= MIN_WEEKS else None
 
 

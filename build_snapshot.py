@@ -13,6 +13,10 @@ snapshot.yml(평일 16:00 KST)에서 실행되어 yfinance로 전종목 2년치�
   상장 1년 미만이라 N회가 안 되면 평균 × N으로 연환산하고 `상장1Y미만`으로 표시한다.
 - 월배당금: 월배당 종목은 최근 1회, 그 외는 연간배당금 / 12.
 - 1Y배당률: 연간배당금 / 현재 주가 (What-if의 매수 기준 가격과 동일).
+- 위험·장기 지표 (2026-11-11, expert_picks.py 후보 선정용, 모두 Adj Close 기준 %)
+  2Y연환산총수익률: 상장 2년 미만이면 NaN. 1Y변동성: 일간 수익률 표준편차 × √252.
+  1Y최대낙폭: 최근 1년 고점 대비 최대 하락(음수). 주식상관: 1년 주간 수익률이
+  KODEX 200·TIGER 미국S&P500과 갖는 상관 중 큰 값(일간은 한·미 장 시차로 왜곡). 26주 미만이면 NaN.
 """
 from __future__ import annotations
 
@@ -38,6 +42,8 @@ MIN_ROWS = 20
 MIN_SUCCESS_RATE = 0.95   # 이보다 적게 수집되면 parquet을 덮어쓰지 않고 실패 처리
 # 지급 간격 중앙값(일) 상한 → 연 지급 횟수
 FREQUENCIES = ((10, 52), (45, 12), (120, 4), (240, 2), (10_000, 1))
+EQUITY_BENCH = ("069500", "360750")   # KODEX 200, TIGER 미국S&P500 — 주식상관 기준
+MIN_WEEKS = 26   # 주간 상관 최소 표본. select_default.py도 이 값을 쓴다
 
 
 def _trim_to_confirmed_close(hist: pd.DataFrame) -> pd.DataFrame:
@@ -68,6 +74,11 @@ def _history(item: str) -> pd.DataFrame:
     if hist.index.tz is not None:
         hist.index = hist.index.tz_localize(None)
     return _trim_to_confirmed_close(hist)
+
+
+def to_weekly_returns(price: pd.Series) -> pd.Series:
+    """금요일 마감 주간 수익률. 일간은 한·미 장 시차로 상관이 낮게 왜곡돼 주간을 쓴다(select_default.py 공용)."""
+    return price.resample("W-FRI").last().pct_change().dropna()
 
 
 def _price_on_or_before(s: pd.Series, date: pd.Timestamp) -> float:
@@ -107,14 +118,22 @@ def fetch_etf_data(item: str) -> dict | str:
         return "유효 종가 부족"
 
     latest = close.index.max()
-    d_1y, d_3m = latest - pd.DateOffset(years=1), latest - pd.DateOffset(months=3)
-    short_history = close.index.min() > d_1y + pd.Timedelta(days=7)
+    d_1y, d_2y, d_3m = (latest - pd.DateOffset(years=1), latest - pd.DateOffset(years=2),
+                        latest - pd.DateOffset(months=3))
+
+    def listed_by(date: pd.Timestamp) -> bool:
+        return close.index.min() <= date + pd.Timedelta(days=7)
 
     div = hist.loc[hist["Dividends"] > 0, "Dividends"]
     annual, monthly, label = _dividend_stats(div)
 
     def ret(s: pd.Series, date: pd.Timestamp) -> float:
         return round((s.iloc[-1] / _price_on_or_before(s, date) - 1) * 100, 2)
+
+    def annualized_2y(s: pd.Series) -> float:
+        return round(((1 + ret(s, d_2y) / 100) ** 0.5 - 1) * 100, 2) if listed_by(d_2y) else float("nan")
+
+    adj_1y = adj.loc[adj.index > d_1y]
 
     return {
         "Symbol": item,
@@ -128,7 +147,11 @@ def fetch_etf_data(item: str) -> dict | str:
         "배당일": label,
         "3M총수익률": ret(adj, d_3m),
         "1Y총수익률": ret(adj, d_1y),
-        "상장1Y미만": bool(short_history),
+        "2Y연환산총수익률": annualized_2y(adj),
+        "1Y변동성": round(adj_1y.pct_change().std() * 252 ** 0.5 * 100, 2),
+        "1Y최대낙폭": round((adj_1y / adj_1y.cummax() - 1).min() * 100, 2),
+        "_weekly": to_weekly_returns(adj_1y),   # build()가 꺼내 주식상관 계산 후 버림
+        "상장1Y미만": not listed_by(d_1y),
         "기준일": latest.strftime("%Y-%m-%d"),
         "기준일_배당": div.index[-1].strftime("%Y-%m-%d") if not div.empty else "",
     }
@@ -142,7 +165,16 @@ def build() -> tuple[pd.DataFrame, dict]:
     with ThreadPoolExecutor(max_workers=20) as executor:
         results = dict(zip(symbols, executor.map(fetch_etf_data, symbols)))
 
-    result = pd.DataFrame([r for r in results.values() if isinstance(r, dict)])
+    ok = {k: r for k, r in results.items() if isinstance(r, dict)}
+    weekly = {k: r.pop("_weekly") for k, r in ok.items()}
+    bench = [weekly[b] for b in EQUITY_BENCH if b in weekly]
+
+    def equity_corr(w: pd.Series) -> float:
+        cs = [w.corr(b) for b in bench if len(w.index.intersection(b.index)) >= MIN_WEEKS]
+        return round(max(cs), 2) if cs else float("nan")
+
+    result = pd.DataFrame(list(ok.values()))
+    result["주식상관"] = result["Symbol"].map({k: equity_corr(w) for k, w in weekly.items()})
     result["1M배당률"] = (result["월배당금"] / result["주가"] * 100).round(2)
     result["1Y배당률"] = (result["연간배당금"] / result["주가"] * 100).round(2)
 

@@ -1,7 +1,7 @@
 """전문가 3인 합의 추천 생성 (주 1회, GitHub Actions).
 
 흐름
-  1. 후보 추리기(코드): 스냅샷에서 시총·상장기간·상품유형 필터 → 후보 표
+  1. 후보 표(코드): 시총·상장기간·레버리지 필터 + 같은 상품 중복 제거 후 전체. 배당·성장·대표·방어 기준은 '주목' 열로만 표시
   2. 1라운드: 전문가 3명이 웹 검색으로 시장 상황을 확인하고 묶음별 종목 제안 (병렬)
   3. 2라운드: 제안된 종목 전체에 3명이 각각 찬반 투표 (병렬, 구조화 출력)
   4. 합의 판정(코드): 찬성 2표 이상만 남김 — AI가 합의 여부를 쓰지 않는다
@@ -70,23 +70,62 @@ GUARDRAIL = (
 
 
 # ── 1. 후보 ────────────────────────────────────────────────
+# 후보는 기본 필터를 통과한 전체. 아래 기준은 거르지 않고 표의 '주목' 열로만 표시한다
+N_INCOME, N_GROWTH, N_PER_CATEGORY = 30, 30, 5
+# 방어: 주식과 따로 움직이면서 변동이 과하지 않거나(금·장기채·리츠), 변동 자체가 작은 상품(채권·현금성)
+DEF_MAX_CORR, DEF_MAX_VOL, LOW_VOL_MAX = 0.3, 35, 8
+
+
+def _same_product(name: pd.Series) -> pd.Series:
+    """운용사명(첫 단어)을 뗀 이름. 'KODEX 머니마켓액티브'와 'TIGER 머니마켓액티브'를 같은 상품으로 본다."""
+    return name.str.split(n=1).str[1].fillna(name).str.replace(" ", "")
+
+
+def _growth_score(d: pd.DataFrame) -> pd.Series:
+    """1년·2년(연환산) 총수익률과 위험 대비 1년 총수익률의 백분위 평균. 상장 2년 미만은 2년 항목을 빼고 평균."""
+    ranks = pd.concat([
+        d["1Y총수익률"].rank(pct=True),
+        d["2Y연환산총수익률"].rank(pct=True),
+        (d["1Y총수익률"] / d["1Y변동성"].clip(lower=1)).rank(pct=True),
+    ], axis=1)
+    return ranks.mean(axis=1)
+
+
 def build_candidates(df: pd.DataFrame) -> pd.DataFrame:
     d = df[(df["시총"] >= MIN_CAP) & (~df["상장1Y미만"])]
     d = d[~d["Name"].str.contains(EXCLUDE_PAT, regex=True)]
-    picks = pd.concat([
-        d[d["배당일"].isin(MONTHLY_LABELS)].nlargest(30, "1Y배당률"),
-        d.nlargest(30, "1Y총수익률"),
-        d.nlargest(30, "시총"),
-        d[d["Name"].str.contains("채권|국채|금리|머니마켓|단기|KOFR|CD|금현물|골드", regex=True)].nlargest(20, "시총"),
-    ]).drop_duplicates("Symbol")
-    return picks.sort_values("시총", ascending=False)
+    # 운용사만 다른 같은 상품은 시총 1위만 남긴다(표 길이 절약, 전문가는 대표 상품으로 판단)
+    d = d.sort_values("시총", ascending=False)
+    d = d[~_same_product(d["Name"]).duplicated()].copy()
+    vol = d["1Y변동성"]
+    tags = {
+        "배당": d[d["배당일"].isin(MONTHLY_LABELS)].nlargest(N_INCOME, "1Y배당률").index,
+        "성장": _growth_score(d).nlargest(N_GROWTH).index,
+        "대표": d.groupby("분류").head(N_PER_CATEGORY).index,   # d는 시총순
+        "방어": d.index[((d["주식상관"] <= DEF_MAX_CORR) & (vol <= DEF_MAX_VOL)) | (vol <= LOW_VOL_MAX)],
+    }
+    d["주목"] = ["·".join(t for t, idx in tags.items() if i in idx) or "-" for i in d.index]
+    return d.sort_values(["분류", "시총"], ascending=[True, False])
+
+
+# 후보 표 열 → 머리글. 값 없음은 "-"
+TABLE_COLS = {"Symbol": "코드", "Name": "상품명", "분류": "분류", "시총": "시총(억원)", "1Y배당률": "1Y배당률",
+              "1Y총수익률": "1Y총수익", "2Y연환산총수익률": "2Y연환산총수익(상장 2년 미만 -)",
+              "3M총수익률": "3M총수익", "1Y변동성": "1Y변동성", "1Y최대낙폭": "1Y최대낙폭",
+              "주식상관": "주식상관(KOSPI200·S&P500 중 큰 값)", "배당일": "배당주기",
+              "주목": "주목(배당=월배당 배당률 상위·성장=1Y·2Y·위험조정 상위·대표=분류별 시총 상위·방어=저상관·저변동)"}
+
+
+def _cell(col, v) -> str:
+    if isinstance(v, float):
+        return "-" if pd.isna(v) else f"{v:.2f}" if col == "주식상관" else f"{v:.1f}"
+    return str(v)
 
 
 def candidates_table(c: pd.DataFrame) -> str:
-    cols = ["Symbol", "Name", "시총", "1Y배당률", "1Y총수익률", "3M총수익률", "배당일"]
-    lines = ["코드 | 상품명 | 시총(억원) | 1Y배당률(%) | 1Y총수익률(%) | 3M총수익률(%) | 배당주기"]
-    for r in c[cols].itertuples(index=False):
-        lines.append(" | ".join(str(v) for v in r))
+    lines = ["(수치 단위는 %, 시총은 억원, 주식상관은 -1~1)", " | ".join(TABLE_COLS.values())]
+    for r in c[list(TABLE_COLS)].itertuples(index=False):
+        lines.append(" | ".join(_cell(col, v) for col, v in zip(TABLE_COLS, r)))
     return "\n".join(lines)
 
 
@@ -140,7 +179,8 @@ def round1(expert, table, today):
     )
     user = (
         f"오늘은 {today}(KST)다. 웹 검색으로 이번 주 금리·환율·주식시장 상황과 당신 관점에서 중요한 뉴스를 확인하라(검색은 꼭 필요한 만큼만).\n"
-        "그다음 아래 후보 표에서만 골라 묶음별로 2~4개 종목을 제안하라. 표에 없는 종목은 제안하지 않는다.\n\n"
+        "그다음 아래 후보 표에서만 골라 묶음별로 2~4개 종목을 제안하라. 표에 없는 종목은 제안하지 않는다. "
+        "수익률만 보지 말고 2년 성과·변동성·최대낙폭·주식상관(낮을수록 주식과 따로 움직임)도 함께 따진다. '주목' 열은 참고 표시일 뿐이며 표시가 없는 종목도 똑같이 고를 수 있다.\n\n"
         f"[묶음]\n{bundles_brief()}\n\n[후보 표 — 대시보드 스냅샷]\n{table}\n\n"
         "출력 형식(한국어, 간결하게):\n"
         "## 시장 판단\n2~3문장\n"

@@ -19,17 +19,19 @@ HEADERS = {
 }
 OUT = Path(__file__).parent / "etf_list.csv"
 MIN_LIST_ROWS = 500  # 이보다 적으면 응답 이상으로 보고 기존 목록 유지
+# 네이버 ETF 화면의 분류 탭(etfTabCode). expert_picks.py가 분류별로 후보를 고른다
+CATEGORIES = {1: "국내지수", 2: "국내테마", 3: "국내파생", 4: "해외주식", 5: "원자재", 6: "채권", 7: "기타"}
 
 
 def main() -> int:
     r = requests.get(URL, headers=HEADERS, timeout=15)
     r.raise_for_status()
     rows = r.json()["result"]["etfItemList"]
-    df = (
-        pd.DataFrame(rows)
-        .rename(columns={"itemcode": "Symbol", "itemname": "Name", "marketSum": "MarCap"})
-        [["Symbol", "Name", "MarCap"]]
-    )
+    df = pd.DataFrame(rows).rename(columns={"itemcode": "Symbol", "itemname": "Name", "marketSum": "MarCap"})
+    unknown = sorted(set(df["etfTabCode"]) - set(CATEGORIES))
+    if unknown:   # 네이버가 탭 체계를 바꾸면 분류별 후보 선정이 조용히 무너지므로 알린다
+        print(f"경고: 모르는 분류 코드 {unknown} — '기타'로 처리", file=sys.stderr)
+    df = df.assign(분류=df["etfTabCode"].map(CATEGORIES).fillna("기타"))[["Symbol", "Name", "MarCap", "분류"]]
     if len(df) < MIN_LIST_ROWS:
         print(f"응답 {len(df)}행 < {MIN_LIST_ROWS} — 기존 목록 유지", file=sys.stderr)
         return 1
