@@ -1,40 +1,13 @@
 {
   "asof": "2026-11-10",
-  "generated_at": "2026-11-10 20:57",
+  "generated_at": "2026-11-10 21:04",
   "model": "claude-opus-5-5",
-  "market_summary": "반도체 급락 이후 하루 등락폭이 큰 장이 이어져 변동성 관리가 중요한 시기입니다.",
+  "market_summary": "금리 인상 경계 속 주식 변동성이 커져 채권·현금성과의 분산이 중요한 국면입니다.",
   "experts": [
     {
       "key": "macro",
       "name": "거시·자산배분",
-      "view": "금리 인상 기대가 남아 있어 단기 금리형 상품이 상대적으로 유리하다고 봅니다.",
-      "sources": [
-        {
-          "title": "[KFT 모닝 브리프] 2026.11.10 — 오늘 꼭 알아야 할 국내외 경제뉴스 - 한국금융신문",
-          "url": "https://www.fntimes.com/html/view.php?ud=202611100710183972141825007d_18"
-        },
-        {
-          "title": "증시 반등에 원/달러 환율 이틀째 하락…1330원대 재진입 - 머니투데이",
-          "url": "https://www.mt.co.kr/economy/2026/11/10/2026111016284356804"
-        },
-        {
-          "title": "환율",
-          "url": "https://www.truefriend.com/main/research/research/Exchange.jsp"
-        },
-        {
-          "title": "[매일 금리·환율 브리핑] 11월 10일, 원/달러 환율 9.6원 하락 - 데일리팝",
-          "url": "http://www.dailypop.kr/news/articleView.html?idxno=104416"
-        },
-        {
-          "title": "코스피, 4.39% 오른 5,239.13 마감…4거래일만에 반등 : 네이트 뉴스",
-          "url": "https://m.news.nate.com/view/20261110n24981"
-        }
-      ]
-    },
-    {
-      "key": "income",
-      "name": "배당·인컴",
-      "view": "총수익이 분배를 웃도는 배당형과 월 분배 금리형 상품에 주목합니다.",
+      "view": "주식 쏠림을 줄이고 현금성·채권과 고르게 나누는 분산이 유리하다고 봅니다.",
       "sources": [
         {
           "title": "한발 더 남았다…11월 금리인상 가를 GDP·연준에 쏠린 눈",
@@ -59,9 +32,36 @@
       ]
     },
     {
+      "key": "income",
+      "name": "배당·인컴",
+      "view": "원금을 깎지 않는 분배 구조와 금리 연동 단기금리형에 주목합니다.",
+      "sources": [
+        {
+          "title": "코스피 급락 속 널뛴 환율···'强달러' 다시 올까 - 뉴스웨이",
+          "url": "https://www.newsway.co.kr/news/view?ud=2026111013410253609"
+        },
+        {
+          "title": "증시 반등에 원/달러 환율 이틀째 하락…1330원대 재진입 - 머니투데이",
+          "url": "https://www.mt.co.kr/economy/2026/11/10/2026111016284356804"
+        },
+        {
+          "title": "환율",
+          "url": "https://www.truefriend.com/main/research/research/Exchange.jsp"
+        },
+        {
+          "title": "물가는 3% 육박, 코스피는 5000선 위태…금리 결정 앞둔 한은 딜레마 - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611080705352845"
+        },
+        {
+          "title": "KOSDAQ 과거 금리 - Investing.com",
+          "url": "https://kr.investing.com/indices/kosdaq-historical-data"
+        }
+      ]
+    },
+    {
       "key": "risk",
       "name": "위험관리",
-      "view": "고분배 커버드콜과 반도체 쏠림을 피하고 분산과 완충을 중시합니다.",
+      "view": "금리 인상기에는 단기금리형이 유리하고 고분배 커버드콜은 경계합니다.",
       "sources": [
         {
           "title": "코스피 급락 속 널뛴 환율···'强달러' 다시 올까 - 뉴스웨이",
@@ -80,8 +80,8 @@
           "url": "https://www.truefriend.com/main/research/research/Exchange.jsp"
         },
         {
-          "title": "[11월 첫째 주 세계경제동향 브리핑] 코스피·코스닥 11%대 동반 폭락…美 증시도 급락 < 경제일반 < 경제 < 기사본문 - 기호일보",
-          "url": "https://www.kihoilbo.co.kr/news/articleView.html?idxno=3040119"
+          "title": "11월에도 기준금리 0.25% 올린 ‘3.25%’ 예상 < 은행·증권 < 스마트금융 < 기사본문 - 중소기업투데이",
+          "url": "http://www.sbiztoday.kr/news/articleView.html?idxno=27384"
         }
       ]
     }
@@ -96,25 +96,17 @@
           "symbol": "458730",
           "name": "TIGER 미국배당다우존스",
           "votes": 3,
-          "reason": "총수익이 분배를 크게 웃돌고 급락장에서도 잘 버틴 점이 강점입니다.",
-          "caution": "환노출 상품이라 원화 강세 시 수익이 줄 위험이 있습니다.",
+          "reason": "총수익이 배당률을 웃돌아 원금 훼손 없이 월 분배가 이어지는 점이 강점입니다.",
+          "caution": "원화 강세 시 원화 기준 수익이 줄어들 위험이 있습니다.",
           "dissent": ""
         },
         {
           "symbol": "459580",
           "name": "KODEX CD금리액티브(합성)",
-          "votes": 3,
-          "reason": "월초 분배가 나오고 금리 인상 시 분배가 늘어나는 구조가 강점입니다.",
-          "caution": "금리가 내려가면 분배금도 줄어들 수 있습니다.",
-          "dissent": ""
-        },
-        {
-          "symbol": "483290",
-          "name": "KODEX 미국배당다우존스타겟커버드콜",
           "votes": 2,
-          "reason": "높은 분배에도 총수익이 이를 웃돌아 온 점이 강점입니다.",
-          "caution": "상승장에서는 수익이 일부만 반영될 위험이 있습니다.",
-          "dissent": "규모가 작아 유동성 위험이 있고 TIGER 미국배당다우존스와 기초지수가 겹친다는 반대 의견이 있습니다."
+          "reason": "원금 변동이 거의 없고 금리 인상 시 분배가 빠르게 반영되는 구조입니다.",
+          "caution": "금리가 내려가면 분배금도 줄어들 수 있습니다.",
+          "dissent": "KODEX CD1년금리플러스액티브(합성)와 역할이 겹치고, 분배율·총수익은 그쪽이 다소 높다는 지적입니다."
         }
       ]
     },
@@ -127,16 +119,16 @@
           "symbol": "278530",
           "name": "KODEX 200TR",
           "votes": 3,
-          "reason": "배당을 자동 재투자해 총수익을 쌓는 데 적합합니다.",
-          "caution": "반도체 비중이 커 국내 증시 급락 위험이 있습니다.",
+          "reason": "분배금을 자동 재투자해 복리 효과와 과세이연을 누릴 수 있는 점이 강점입니다.",
+          "caution": "최근 하락폭이 커 단기 변동성 위험이 있습니다.",
           "dissent": ""
         },
         {
           "symbol": "360750",
           "name": "TIGER 미국S&P500",
           "votes": 3,
-          "reason": "저비용 미국 대표지수로 국내 쏠림을 분산하는 핵심 자산에 적합합니다.",
-          "caution": "환노출 상품이라 원화 강세 시 수익이 줄 위험이 있습니다.",
+          "reason": "규모가 크고 저비용인 미국 대표지수로 장기 성장의 핵심 축에 적합합니다.",
+          "caution": "환헤지가 없어 환율 변동 위험이 있습니다.",
           "dissent": ""
         }
       ]
@@ -147,19 +139,19 @@
       "target": "변동성을 줄이거나 대기 자금을 둘 분",
       "picks": [
         {
-          "symbol": "273130",
-          "name": "KODEX 종합채권(AA-이상)액티브",
-          "votes": 3,
-          "reason": "주식 급락기에 플러스를 기록해 완충 효과를 보여준 점이 강점입니다.",
-          "caution": "추가 금리 인상 시 가격이 하락할 위험이 있습니다.",
-          "dissent": ""
-        },
-        {
           "symbol": "488770",
           "name": "KODEX 머니마켓액티브",
           "votes": 3,
-          "reason": "가격 변동이 거의 없어 대기자금 보관 용도에 적합합니다.",
+          "reason": "규모가 크고 꾸준한 플러스 수익으로 변동장 대기자금 용도에 적합합니다.",
           "caution": "",
+          "dissent": ""
+        },
+        {
+          "symbol": "273130",
+          "name": "KODEX 종합채권(AA-이상)액티브",
+          "votes": 3,
+          "reason": "주식 급락기에 반대로 움직여 하락장 완충 효과가 확인된 점이 강점입니다.",
+          "caution": "금리가 추가로 오르면 가격이 떨어질 위험이 있습니다.",
           "dissent": ""
         }
       ]
@@ -172,7 +164,6 @@
         "KODEX 200TR",
         "KODEX CD금리액티브(합성)",
         "KODEX 머니마켓액티브",
-        "KODEX 미국배당다우존스타겟커버드콜",
         "KODEX 종합채권(AA-이상)액티브",
         "TIGER 미국S&P500",
         "TIGER 미국배당다우존스"
@@ -184,7 +175,6 @@
         "360750",
         "458730",
         "459580",
-        "483290",
         "488770"
       ],
       "_removed_syms": []
