@@ -17,6 +17,18 @@ filterwarnings("ignore")
 
 # 앱 본문 폰트는 .streamlit/config.toml, iframe 표와 차트는 아래 값으로 지정한다.
 FONT_STACK = "Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+# 다크 고정 팔레트 — 홈페이지(jhawk.kr index.css)와 같은 값. 상승 빨강·하락 파랑(한국식)은 다크용 밝은 톤
+# config.toml [theme]의 bg·surface·text·border·primary(accent_fill)도 같은 값으로 맞춘다
+C = {
+    "bg": "#0b0c0e", "surface": "#15171a", "surface_2": "#1d2025", "row_alt": "#121417", "total": "#1a2433",
+    "text": "#f2f3f5", "text_2": "#c9ccd2", "text_muted": "#8f949c", "icon": "#aeb3bb",
+    "accent": "#3d9bff", "accent_fill": "#0a6fe0", "accent_fill_hover": "#1a7cf0",
+    "gain": "#ff6b6b", "loss": "#5b9dff", "border": "#24272d", "border_strong": "rgba(255,255,255,0.16)",
+}
+ROOT_CSS = ":root{color-scheme:dark;" + "".join(f"--{k.replace('_', '-')}:{v};" for k, v in C.items()) + "}"
+# iframe(표)은 부모와 color-scheme이 달라 브라우저 기본 캔버스가 칠해지므로 페이지 배경을 직접 채운다
+IFRAME_BASE = (f'<style>{ROOT_CSS}html,body{{margin:0;background:{C["bg"]};color:{C["text"]};}}'
+               f'::-webkit-scrollbar{{height:8px;width:8px}}::-webkit-scrollbar-thumb{{background:{C["surface_2"]};border-radius:4px}}</style>')
 FONT_LINK = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">'
 
 st.set_page_config(
@@ -87,29 +99,28 @@ def _source_label(src: dict) -> str:
 
 
 XP_CSS = """
-.xp-wrap { background:#f7f8fa; border-radius:14px; padding:20px 20px 16px; margin:0.5rem 0 2rem; word-break:keep-all; }
+.xp-wrap { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:20px 20px 16px; margin:0.5rem 0 2rem; word-break:keep-all; }
 .xp-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
 .xp-wrap h2.xp-h { margin:0; padding:0; font-size:1.35rem; font-weight:800; letter-spacing:-0.01em; color:var(--text); }
 .xp-date { font-size:0.8rem; color:var(--text-muted); }
 .xp-summary { font-size:0.92rem; font-weight:500; color:var(--text); margin:10px 0 4px; line-height:1.55;
-              border-left:3px solid #d0d3da; padding-left:10px; }
+              border-left:3px solid var(--accent); padding-left:10px; }
 .xp-disclaimer { font-size:0.8rem; color:var(--text-muted); margin:0 0 12px; line-height:1.5; }
 .xp-nav { display:none; }
 .xp-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; }
-.xp-grid:focus-visible, .xp-wrap a:focus-visible, .xp-wrap summary:focus-visible {
+.xp-wrap a:focus-visible, .xp-wrap summary:focus-visible {
   outline:2px solid var(--text); outline-offset:2px; border-radius:6px; }
-.xp-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 18px;
-           box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+.xp-card { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
 .xp-wrap h3.xp-title { margin:0; padding:0; font-size:1.05rem; font-weight:800; color:var(--text); }
 .xp-target { font-size:0.8rem; color:var(--text-muted); margin:2px 0 4px; }
 .xp-card ul.xp-picks { list-style:none; margin:0; padding:0; }
-.xp-wrap li.xp-pick { border-top:1px solid #eef0f4; padding:12px 0 10px !important; margin:0 !important; }
+.xp-wrap li.xp-pick { border-top:1px solid var(--border); padding:12px 0 10px !important; margin:0 !important; }
 .xp-wrap [data-testid="stHeaderActionElements"] { display:none !important; }   /* Streamlit 제목 앵커 아이콘 */
-.xp-pick:first-child { border-top:1px solid #e3e5ea; }
+.xp-pick:first-child { border-top:1px solid var(--border-strong); }
 .xp-wrap h4.xp-name { margin:0; padding:0; font-size:0.95rem; font-weight:700; color:var(--text); line-height:1.4; }
 .xp-badge { display:inline-block; margin-left:6px; font-size:0.72rem; font-weight:600; padding:1px 7px;
-            border-radius:999px; background:#eef0f4; color:var(--text); vertical-align:1px; white-space:nowrap; }
-.xp-reason { font-size:0.86rem; color:var(--text); line-height:1.55; margin-top:4px; }
+            border-radius:999px; background:var(--surface); border:1px solid var(--border-strong); color:var(--text); vertical-align:1px; white-space:nowrap; }
+.xp-reason { font-size:0.86rem; color:var(--text-2); line-height:1.55; margin-top:4px; }
 .xp-caution, .xp-dissent { font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:3px; }
 .xp-caution b, .xp-dissent b { font-weight:600; color:var(--text); margin-right:4px; }
 .xp-metric { font-size:0.8rem; color:var(--text-muted); margin-top:6px; font-variant-numeric:tabular-nums; }
@@ -123,23 +134,21 @@ XP_CSS = """
 .xp-wrap summary::after { content:"›"; display:inline-block; transform:rotate(90deg); transition:transform .15s; }
 .xp-wrap details[open] summary::after { transform:rotate(-90deg); }
 .xp-wrap details ul { list-style:none; margin:4px 0 0; padding:0; }
-.xp-wrap details li { margin:0 !important; padding:8px 0 !important; border-top:1px solid #e3e5ea; line-height:1.6; }
+.xp-wrap details li { margin:0 !important; padding:8px 0 !important; border-top:1px solid var(--border); line-height:1.6; }
 .xp-src { display:inline-flex; flex-wrap:wrap; gap:6px; margin-left:6px; vertical-align:middle; }
 .xp-wrap .xp-src a { display:inline-block; min-height:24px; line-height:22px; font-size:0.74rem; color:var(--text-muted);
-                     text-decoration:none; border:1px solid #d9dce2; border-radius:6px; padding:0 7px; background:#fff; }
-.xp-wrap .xp-src a:hover { color:var(--text); border-color:#b9bdc6; }
+                     text-decoration:none; border:1px solid var(--border-strong); border-radius:6px; padding:0 7px; }
+.xp-wrap .xp-src a:hover { color:var(--text); border-color:var(--text-muted); }
 .xp-note { font-size:0.75rem; color:var(--text-muted); line-height:1.6; max-width:68ch;
-           margin-top:12px; padding-top:10px; border-top:1px dashed #d9dce2; }
+           margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-strong); }
 @media (max-width: 900px) {
   .xp-wrap { padding:16px 14px 14px; }
   .xp-nav { display:flex; gap:6px; margin:0 0 10px; overflow-x:auto; scrollbar-width:none; }
   .xp-nav::-webkit-scrollbar { display:none; }
   .xp-wrap .xp-nav a { flex:0 0 auto; font-size:0.8rem; font-weight:600; color:var(--text); text-decoration:none;
-                       background:#fff; border:1px solid #d9dce2; border-radius:999px; padding:6px 12px; }
-  .xp-grid { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:10px;
-             margin-right:-14px; padding-right:14px; scrollbar-width:none; }
-  .xp-grid::-webkit-scrollbar { display:none; }
-  .xp-card { flex:0 0 82%; scroll-snap-align:start; padding:16px; scroll-margin-top:80px; }
+                       background:var(--surface-2); border:1px solid var(--border-strong); border-radius:999px; padding:6px 12px; }
+  .xp-grid { grid-template-columns:1fr; gap:12px; }   /* 모바일은 세로로 쌓고 칩은 해당 카드로 이동 */
+  .xp-card { padding:16px; scroll-margin-top:16px; }
 }
 """
 
@@ -203,7 +212,7 @@ def render_expert_picks(data: dict, df: pd.DataFrame) -> None:
 <div class="xp-summary">{e(data["market_summary"])}</div>
 <div class="xp-disclaimer">거시·배당·위험관리 관점의 AI 전문가 3명이 제안·투표한 결과입니다. 정보 제공용이며 투자 권유가 아닙니다.</div>
 <nav class="xp-nav" aria-label="추천 묶음 바로가기">{"".join(nav)}</nav>
-<div class="xp-grid" tabindex="0" role="region" aria-label="추천 묶음 {len(cards)}개">{"".join(cards)}</div>
+<div class="xp-grid" role="region" aria-label="추천 묶음 {len(cards)}개">{"".join(cards)}</div>
 <details><summary>전문가별 의견과 참고 출처 {n_src}건</summary><ul>{views}</ul></details>
 <div class="xp-note">선정 기준: 3명 중 2명 이상 찬성한 종목만 싣습니다. 수치는 최신 스냅샷 기준이며, 1년 총수익은 분배금을 포함합니다(아래 표의 1Y수익률은 가격 기준).</div>
 </section>""", unsafe_allow_html=True)
@@ -324,14 +333,14 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
         align = "left" if i == 0 else "right"
         inner = f'<div class="etf-name-text">{col}</div>' if i == 0 else col
         return (f'<th class="{col_class(i, orig_col)}" style="position:sticky;top:0;{pin}'
-                f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
-                f'text-align:{align};white-space:nowrap;border-bottom:2px solid #ccc;">'
+                f'background:{C["surface_2"]};color:{C["text_2"]};font-weight:600;padding:6px 12px;'
+                f'text-align:{align};white-space:nowrap;border-bottom:1px solid {C["border_strong"]};">'
                 f'{inner}</th>')
 
     headers = "".join(th(col, i, orig_cols[i] if i < len(orig_cols) else "") for i, col in enumerate(disp.columns))
     rows = ""
     for idx, row in disp.iterrows():
-        bg = "#ffffff" if idx % 2 == 0 else "#f5f7fb"
+        bg = C["surface"] if idx % 2 == 0 else C["row_alt"]
         symbol = orig.at[idx, "Symbol"] if has_symbol else ""
         tds = ""
         for i, val in enumerate(row):
@@ -345,30 +354,30 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
                 tds += (f'<td class="{cls}" onclick="{onclick}" '
                         f'style="position:sticky;left:0;background:{bg};'
                         f'padding:6px 12px;'
-                        f'border-right:2px solid #ccc;font-weight:500;cursor:pointer;" title="{val}">'
+                        f'border-right:1px solid {C["border_strong"]};font-weight:500;cursor:pointer;" title="{val}">'
                         f'<div class="etf-name-text">{val}</div></td>')
             else:
                 color = ""
                 if orig_col in RET_COLS:
                     orig_val = orig.at[idx, orig_col]
                     if pd.notna(orig_val):
-                        color = "color:#0050d0;" if orig_val < 0 else "color:#d00000;"
+                        color = f'color:{C["loss"]};' if orig_val < 0 else f'color:{C["gain"]};'
                 tds += f'<td class="{cls}" style="padding:6px 12px;white-space:nowrap;background:{bg};text-align:right;font-variant-numeric:tabular-nums;{color}">{val}</td>'
         rows += f"<tr>{tds}</tr>"
 
     modal = (
         '<div id="etf-modal" onclick="if(event.target===this)closeEtfModal()" '
         'style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;'
-        'background:rgba(0,0,0,0.4);z-index:9999;">'
+        'background:rgba(0,0,0,0.6);z-index:9999;">'
         '<div id="etf-modal-box" style="position:absolute;left:50%;transform:translateX(-50%);top:80px;'
-        'background:white;padding:20px 18px 16px;border-radius:14px;min-width:260px;max-width:80%;'
-        f'box-shadow:0 8px 32px rgba(0,0,0,0.2);font-family:{FONT_STACK};">'
-        '<div id="etf-modal-name" style="font-size:15px;font-weight:600;color:#1c1c1e;margin-bottom:16px;'
+        f'background:{C["surface"]};border:1px solid {C["border_strong"]};padding:20px 18px 16px;border-radius:14px;min-width:260px;max-width:80%;'
+        f'box-shadow:0 12px 40px rgba(0,0,0,0.5);font-family:{FONT_STACK};">'
+        f'<div id="etf-modal-name" style="font-size:15px;font-weight:600;color:{C["text"]};margin-bottom:16px;'
         'text-align:center;word-break:keep-all;line-height:1.4;"></div>'
         '<div style="display:flex;gap:8px;">'
-        '<button onclick="openEtfInfo()" style="flex:1;padding:10px;background:#007aff;color:white;border:none;'
+        f'<button onclick="openEtfInfo()" style="flex:1;padding:10px;background:{C["accent_fill"]};color:#fff;border:none;'
         'border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">상품정보</button>'
-        '<button onclick="closeEtfModal()" style="flex:1;padding:10px;background:#e5e5ea;color:#1c1c1e;border:none;'
+        f'<button onclick="closeEtfModal()" style="flex:1;padding:10px;background:{C["surface_2"]};color:{C["text"]};border:none;'
         'border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">닫기</button>'
         '</div></div></div>'
         '<script>'
@@ -393,9 +402,9 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
         '}'
         '</style>'
     )
-    html = (f'{FONT_LINK}{style}{modal}'
+    html = (f'{FONT_LINK}{IFRAME_BASE}{style}{modal}'
             f'<div style="overflow-x:auto;overflow-y:auto;max-height:{height}px;'
-            f'border:1px solid #e0e0e0;border-radius:4px;">'
+            f'border:1px solid {C["border"]};border-radius:10px;">'
             f'<table class="etf-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:{FONT_STACK};">'
             f'<thead><tr>{headers}</tr></thead>'
             f'<tbody>{rows}</tbody>'
@@ -407,26 +416,9 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
 # 메인 앱
 # ─────────────────────────────────────────────
 
-st.markdown("""
+st.markdown(f"<style>{ROOT_CSS}</style>" + """
 <style>
-/* ── 라이트 모드 고정 (OS/브라우저 다크모드 무시) ── */
-:root { color-scheme: light; }
-html, body, [data-testid="stAppViewContainer"] {
-    color-scheme: light !important;
-    background: #ffffff !important;
-    color: #1c1c1e !important;
-}
-
-/* ── 공통 디자인 토큰 ── */
-:root {
-    --accent: #007aff;
-    --bg: #f5f5f7;
-    --text: #1c1c1e;
-    --text-muted: #6e6e73; /* WCAG AA 4.5+ */
-    --gain: #d00000;
-    --loss: #0050d0;
-    --border: rgba(0,0,0,0.08);
-}
+/* ── 다크 고정: 배경·글자는 .streamlit/config.toml 테마, 토큰은 파이썬 C → ROOT_CSS ── */
 
 /* ── Streamlit 기본 헤더/데코/툴바 숨김 → 커스텀 헤더 사용 ── */
 header[data-testid="stHeader"],
@@ -447,16 +439,24 @@ section.main > div.block-container {
 
 /* ── 커스텀 헤더 ── */
 .app-header {
-    background: #fff;
-    border-bottom: 0.5px solid rgba(0,0,0,0.1);
+    background: transparent;
+    border-bottom: 1px solid var(--border);
     padding: 18px 0 14px;
     margin: 0 -4rem 1.2rem;
     padding-left: 4rem; padding-right: 4rem;
 }
 .app-header h1 {
+    display: flex; align-items: center; gap: 10px;
     font-size: 1.6rem; font-weight: 700;
-    color: #1c1c1e; letter-spacing: -0.5px; margin: 0;
+    color: var(--text); letter-spacing: -0.5px; margin: 0; padding: 0;
 }
+.app-header .hd-icon {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+    background: var(--surface-2); display: inline-flex; align-items: center; justify-content: center;
+}
+.app-header .hd-icon svg { width: 20px; height: 20px; fill: none; stroke: var(--icon); stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round; }
+.app-header [data-testid="stHeaderActionElements"] { display: none !important; }
 
 /* ── 모바일 컴팩트화 ── */
 @media (max-width: 640px) {
@@ -466,6 +466,7 @@ section.main > div.block-container {
         padding-left: 1rem; padding-right: 1rem;
     }
     .app-header h1 { font-size: 1.3rem; }
+    .app-header .hd-icon { width: 30px; height: 30px; }
 }
 
 /* ── 탭 스타일 (칩 CTA) ── */
@@ -480,24 +481,25 @@ section.main > div.block-container {
     padding: 12px 22px;
     min-height: 44px;
     border-radius: 999px;
-    color: #1c1c1e;
-    background: #f0f2f6;
-    border: 1.5px solid transparent !important;
+    color: var(--text-2);
+    background: var(--surface);
+    border: 1px solid var(--border) !important;
     transition: all 0.15s ease;
     cursor: pointer;
 }
 .stTabs [data-baseweb="tab"]:hover {
-    background: #e5e7eb;
+    background: var(--surface-2);
+    color: var(--text);
     transform: translateY(-1px);
 }
 .stTabs [aria-selected="true"] {
     color: #ffffff !important;
-    background: #ff4b4b !important;
-    border-color: #ff4b4b !important;
-    box-shadow: 0 4px 12px rgba(255, 75, 75, 0.32);
+    background: var(--accent-fill) !important;
+    border-color: var(--accent-fill) !important;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-fill) 35%, transparent);
 }
 .stTabs [aria-selected="true"]:hover {
-    background: #ff3030 !important;
+    background: var(--accent-fill-hover) !important;
 }
 /* baseweb 기본 underline indicator 숨김 */
 .stTabs [data-baseweb="tab-highlight"],
@@ -522,8 +524,9 @@ section.main > div.block-container {
 
 /* ── 스냅샷 배너 (st.success 대체, 모바일 의미 단위 줄바꿈) ── */
 .snapshot-banner {
-    background: #e8f5e9;
-    color: #1b5e20;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-2);
     border-radius: 8px;
     padding: 10px 14px;
     margin: 0.25rem 0 1rem;
@@ -531,11 +534,11 @@ section.main > div.block-container {
     line-height: 1.55;
 }
 .snapshot-banner span { display: inline-block; white-space: nowrap; }
-.snapshot-banner .sep { color: #66bb6a; padding: 0 4px; }
+.snapshot-banner .sep { color: var(--text-muted); padding: 0 4px; }
 </style>
 
 <div class="app-header">
-  <h1>📈 ETF 투자 가이드</h1>
+  <h1><span class="hd-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span>ETF 투자 가이드</h1>
 </div>
 """, unsafe_allow_html=True)
 
@@ -646,9 +649,9 @@ with tab2:
 
     st.markdown(
         f"""
-        <div style="background:#eef4ff;border-left:4px solid #ff4b4b;padding:14px 18px;border-radius:8px;margin:8px 0 12px 0;word-break:keep-all;overflow-wrap:break-word;">
-          <div style="font-size:1.05rem;font-weight:700;color:#31333f;margin-bottom:8px;">🤖 클로드가 추천하는 포트폴리오</div>
-          <div style="font-size:0.9rem;color:#31333f;line-height:1.6;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 18px;border-radius:10px;margin:8px 0 12px 0;word-break:keep-all;overflow-wrap:break-word;">
+          <div style="font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:8px;">클로드가 추천하는 포트폴리오</div>
+          <div style="font-size:0.9rem;color:var(--text-2);line-height:1.6;">
             <b>목표 10억</b> — 은퇴 후 <b>현금흐름</b> · <b>하락장 원금 방어</b><br/>
             <b>구성</b>: {composition}<br/>
             <b>운용</b>: 세후 월 약 {default_monthly / 10_000:,.0f}만원 분배금(최근 1년 지급액 기준)을 생활비로 쓰고, 하락장엔 현금 버퍼 사용<br/>
@@ -706,7 +709,7 @@ with tab2:
         df_result = st.session_state["simul_result"]
 
         st.info(
-            "📌 1년 보유 가정 시뮬레이션 — 최근 3개월·1년 수익률을 기준으로 한 예상 결과입니다.\n\n"
+            "1년 보유 가정 시뮬레이션 — 최근 3개월·1년 수익률을 기준으로 한 예상 결과입니다.\n\n"
             "- 배당금은 최근 1년(연 지급 횟수만큼) 실제 지급액, 주가차익은 배당을 뺀 순수 가격 변동\n"
             "- 배당소득세 15.4% 적용\n"
             "- 매매차익에 15.4% 차감 (국내주식형 ETF는 매매차익 비과세 자동 반영)\n"
@@ -720,16 +723,19 @@ with tab2:
         total_profit_3m = df_result["주가차익 (3M 추세 가정)"].sum()
 
         # 요약 지표 (모바일 2x2 wrap, 핵심=배당금에 액센트 강조)
-        label_st = "font-size:0.82rem;color:#6e6e73;margin-bottom:4px;line-height:1.4;"
+        label_st = "font-size:0.82rem;color:var(--text-muted);margin-bottom:4px;line-height:1.4;"
         val_base = "font-weight:700;white-space:nowrap;line-height:1.2;"
-        val_main = val_base + "font-size:clamp(1.2rem,4.4vw,1.6rem);color:#d00000;"
-        val_sub = val_base + "font-size:clamp(1.05rem,3.8vw,1.4rem);color:#1c1c1e;"
+        val_big = val_base + "font-size:clamp(1.2rem,4.4vw,1.6rem);"
+        val_main = val_big + "color:var(--text);"
+        val_sub = val_base + "font-size:clamp(1.05rem,3.8vw,1.4rem);color:var(--text-2);"
+        val_profit = val_big + "color:" + (
+            "var(--gain);" if total_profit_3m > 0 else "var(--loss);" if total_profit_3m < 0 else "var(--text);")
         summary_html = f"""
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px 16px;margin:8px 0;">
           <div><div style="{label_st}">목표 투자금액</div><div style="{val_sub}">{total_invest:,.0f}원</div></div>
           <div><div style="{label_st}">연간 배당금</div><div style="{val_main}">{total_annual_div:,.0f}원</div></div>
           <div><div style="{label_st}">월 배당금</div><div style="{val_sub}">{monthly_div:,.0f}원</div></div>
-          <div><div style="{label_st}">연간 주가차익</div><div style="{val_main}">{total_profit_3m:,.0f}원</div></div>
+          <div><div style="{label_st}">연간 주가차익</div><div style="{val_profit}">{total_profit_3m:,.0f}원</div></div>
         </div>
         """
         st.markdown(summary_html, unsafe_allow_html=True)
@@ -774,15 +780,15 @@ with tab2:
             head_html = WRAP_HEADER.get(col, col)
             inner = f'<div class="sim-name-text">{head_html}</div>' if i == 0 else head_html
             sim_headers += (f'<th class="{sim_class(i, col)}" style="position:sticky;top:0;{pin}'
-                            f'background:#f0f2f6;color:#31333f;padding:6px 12px;'
-                            f'text-align:{align};white-space:nowrap;line-height:1.3;border-bottom:2px solid #ccc;">'
+                            f'background:{C["surface_2"]};color:{C["text_2"]};font-weight:600;padding:6px 12px;'
+                            f'text-align:{align};white-space:nowrap;line-height:1.3;border-bottom:1px solid {C["border_strong"]};">'
                             f'{inner}</th>')
         sim_rows = ""
         for idx, row in df_with_total.iterrows():
             is_total = row["종목"] == "합계"
-            bg = "#fff3cd" if is_total else ("#ffffff" if idx % 2 == 0 else "#f5f7fb")
+            bg = C["total"] if is_total else (C["surface"] if idx % 2 == 0 else C["row_alt"])
             weight = "font-weight:700;" if is_total else ""
-            border_top = "border-top:2px solid #999;" if is_total else ""
+            border_top = f'border-top:1px solid {C["border_strong"]};' if is_total else ""
             tds = ""
             for i, col in enumerate(disp_cols):
                 val = row[col]
@@ -791,14 +797,14 @@ with tab2:
                 cls = sim_class(i, col)
                 if i == 0:
                     tds += (f'<td class="{cls}" style="position:sticky;left:0;background:{bg};'
-                            f'padding:6px 12px;border-right:2px solid #ccc;'
+                            f'padding:6px 12px;border-right:1px solid {C["border_strong"]};'
                             f'font-weight:{("700" if is_total else "500")};{border_top}'
-                            f'color:#1c1c1e;" title="{val}">'
+                            f'color:{C["text"]};" title="{val}">'
                             f'<div class="sim-name-text">{val}</div></td>')
                 else:
                     tds += (f'<td class="{cls}" style="padding:6px 12px;white-space:nowrap;background:{bg};'
                             f'text-align:right;font-variant-numeric:tabular-nums;'
-                            f'color:#1c1c1e;{weight}{border_top}">{val}</td>')
+                            f'color:{C["text"]};{weight}{border_top}">{val}</td>')
             sim_rows += f"<tr>{tds}</tr>"
         sim_height = min(60 + num_rows * 38, 500)
         sim_style = (
@@ -811,9 +817,9 @@ with tab2:
             '}'
             '</style>'
         )
-        sim_html = (f'{FONT_LINK}{sim_style}'
+        sim_html = (f'{FONT_LINK}{IFRAME_BASE}{sim_style}'
                     f'<div style="overflow-x:auto;overflow-y:auto;max-height:{sim_height}px;'
-                    f'border:1px solid #e0e0e0;border-radius:4px;">'
+                    f'border:1px solid {C["border"]};border-radius:10px;">'
                     f'<table class="sim-table" style="border-collapse:collapse;font-size:13px;width:100%;font-family:{FONT_STACK};">'
                     f'<thead><tr>{sim_headers}</tr></thead>'
                     f'<tbody>{sim_rows}</tbody>'
@@ -825,23 +831,23 @@ with tab2:
             """
 <style>
 .tax-tbl { border-collapse:collapse; width:100%; font-size:0.85rem; }
-.tax-tbl th, .tax-tbl td { border:1px solid #d0d3d8; padding:6px 10px; text-align:left; vertical-align:top; }
-.tax-tbl thead tr { background:#f0f2f6; }
+.tax-tbl th, .tax-tbl td { border:1px solid var(--border); padding:6px 10px; text-align:left; vertical-align:top; }
+.tax-tbl thead tr { background:var(--surface-2); }
 @media (max-width: 640px) {
   .tax-tbl, .tax-tbl tbody, .tax-tbl tr, .tax-tbl td { display:block; width:100%; box-sizing:border-box; }
   .tax-tbl thead { display:none; }
-  .tax-tbl tbody tr { margin-bottom:10px; border:1px solid #d0d3d8; border-radius:6px; overflow:hidden; }
-  .tax-tbl tbody td { border:none; border-bottom:1px solid #eceef1; padding:8px 10px; }
+  .tax-tbl tbody tr { margin-bottom:10px; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .tax-tbl tbody td { border:none; border-bottom:1px solid var(--border); padding:8px 10px; }
   .tax-tbl tbody td:last-child { border-bottom:none; }
-  .tax-tbl tbody td:first-child { background:#f0f2f6; font-weight:600; }
+  .tax-tbl tbody td:first-child { background:var(--surface-2); font-weight:600; }
   .tax-tbl tbody td[data-label]::before {
     content: attr(data-label) " · ";
-    color:#6e6e73; font-weight:600; margin-right:2px;
+    color:var(--text-muted); font-weight:600; margin-right:2px;
   }
 }
 </style>
-<div style="margin-top:12px;font-size:0.88rem;color:#31333f;">
-  <div style="font-weight:600;margin-bottom:6px;">📖 참고 — ETF 유형별 세제 비교</div>
+<div style="margin-top:12px;font-size:0.88rem;color:var(--text-2);">
+  <div style="font-weight:600;margin-bottom:6px;color:var(--text);">참고 — ETF 유형별 세제 비교</div>
   <table class="tax-tbl">
     <thead>
       <tr>
@@ -873,7 +879,7 @@ with tab2:
       </tr>
     </tbody>
   </table>
-  <div style="margin-top:6px;color:#6e6e73;font-size:0.78rem;">
+  <div style="margin-top:6px;color:var(--text-muted);font-size:0.78rem;">
     ※ 일반 위탁계좌 기준. 연금계좌(IRP·연금저축·DC)는 인출 시점까지 과세이연.
   </div>
 </div>
@@ -931,10 +937,12 @@ with tab3:
                 ))
 
         if fig.data:
-            fig.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.4)
+            fig.add_hline(y=100, line_dash="dash", line_color=C["text_muted"], opacity=0.5)
             fig.update_layout(
+                template="plotly_dark",   # 범례·호버 다크 기본값
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family=FONT_STACK, color=C["text_2"]),
                 title=f"ETF 주가 추이 비교 ({period_label}, 시작=100)",
-                font_family=FONT_STACK,
                 xaxis_title="날짜",
                 yaxis_title="정규화 주가",
                 hovermode="x unified",
@@ -942,14 +950,16 @@ with tab3:
                 margin=dict(b=160),
                 height=580,
             )
+            fig.update_xaxes(gridcolor=C["border"], zerolinecolor=C["border"])
+            fig.update_yaxes(gridcolor=C["border"], zerolinecolor=C["border"])
             st.plotly_chart(fig, width="stretch")
         else:
             st.error("차트에 표시할 데이터가 없습니다.")
 
 st.markdown("""
-<div style="text-align:center; padding:20px 0; font-size:0.78rem; color:#666;
-            border-top:1px solid #e0e0e0; margin-top:32px;">
+<div style="text-align:center; padding:20px 0; font-size:0.78rem; color:var(--text-muted);
+            border-top:1px solid var(--border); margin-top:32px;">
   이 서비스는 참고용이며, 투자 권유가 아닙니다.<br>
-  Built with Claude Code by 이종호 (<a href="https://jhawk.kr" style="color:#666;">jhawk.kr</a>)
+  Built with Claude Code by 이종호 (<a href="https://jhawk.kr" style="color:var(--text-muted);">jhawk.kr</a>)
 </div>
 """, unsafe_allow_html=True)
