@@ -7,9 +7,10 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 from datetime import datetime
+from urllib.parse import urlparse
 from warnings import filterwarnings
 
-from build_snapshot import ETF_DATA_PARQUET, _trim_to_confirmed_close
+from build_snapshot import ETF_DATA_PARQUET, ROOT, _trim_to_confirmed_close
 from select_default import DEFAULT_JSON, exposure_shares
 
 filterwarnings("ignore")
@@ -38,6 +39,174 @@ def load_etf_data():
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_default_portfolio() -> dict:
     return json.loads(DEFAULT_JSON.read_text(encoding="utf-8"))
+
+
+EXPERT_JSON = ROOT / "expert_picks.json"
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_expert_picks() -> dict | None:
+    try:
+        return json.loads(EXPERT_JSON.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def _signed_pct(v: float) -> str:
+    if pd.isna(v):
+        return "-"
+    color = "var(--gain)" if v > 0 else "var(--loss)" if v < 0 else "inherit"
+    return f'<span style="color:{color}">{v:+.1f}%</span>'
+
+
+SOURCE_NAMES = {
+    "bok.or.kr": "한국은행", "yna.co.kr": "연합뉴스", "mt.co.kr": "머니투데이", "mk.co.kr": "매일경제",
+    "hankyung.com": "한국경제", "asiae.co.kr": "아시아경제", "fnnews.com": "파이낸셜뉴스",
+    "edaily.co.kr": "이데일리", "bizwatch.co.kr": "비즈워치", "newsway.co.kr": "뉴스웨이",
+    "fntimes.com": "한국금융신문", "truefriend.com": "한국투자증권", "chosun.com": "조선일보",
+    "joongang.co.kr": "중앙일보", "donga.com": "동아일보", "sedaily.com": "서울경제",
+    "heraldcorp.com": "헤럴드경제", "news1.kr": "뉴스1", "newsis.com": "뉴시스",
+    "kbthink.com": "KB Think", "reuters.com": "Reuters", "bloomberg.com": "Bloomberg",
+}
+
+
+def _source_label(src: dict) -> str:
+    """출처 표시명: 아는 도메인은 매체명, 그다음 기사 제목 끝의 ' - 매체명', 없으면 도메인."""
+    host = (urlparse(src["url"]).hostname or "").lower()
+    for dom, label in SOURCE_NAMES.items():
+        if host == dom or host.endswith("." + dom):
+            return label
+    for sep in (" - ", " | ", " : "):
+        if sep in src.get("title", ""):
+            tail = src["title"].rsplit(sep, 1)[1].strip()
+            if 0 < len(tail) <= 14:
+                return tail
+    for pre in ("www.", "m.", "news.", "view."):
+        host = host.removeprefix(pre)
+    return host or "출처"
+
+
+XP_CSS = """
+.xp-wrap { background:#f7f8fa; border-radius:14px; padding:20px 20px 16px; margin:0.5rem 0 2rem; word-break:keep-all; }
+.xp-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
+.xp-wrap h2.xp-h { margin:0; padding:0; font-size:1.35rem; font-weight:800; letter-spacing:-0.01em; color:var(--text); }
+.xp-date { font-size:0.8rem; color:var(--text-muted); }
+.xp-summary { font-size:0.92rem; font-weight:500; color:var(--text); margin:10px 0 4px; line-height:1.55;
+              border-left:3px solid #d0d3da; padding-left:10px; }
+.xp-disclaimer { font-size:0.8rem; color:var(--text-muted); margin:0 0 12px; line-height:1.5; }
+.xp-nav { display:none; }
+.xp-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; }
+.xp-grid:focus-visible, .xp-wrap a:focus-visible, .xp-wrap summary:focus-visible {
+  outline:2px solid var(--text); outline-offset:2px; border-radius:6px; }
+.xp-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+           box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+.xp-wrap h3.xp-title { margin:0; padding:0; font-size:1.05rem; font-weight:800; color:var(--text); }
+.xp-target { font-size:0.8rem; color:var(--text-muted); margin:2px 0 4px; }
+.xp-card ul.xp-picks { list-style:none; margin:0; padding:0; }
+.xp-wrap li.xp-pick { border-top:1px solid #eef0f4; padding:12px 0 10px !important; margin:0 !important; }
+.xp-wrap [data-testid="stHeaderActionElements"] { display:none !important; }   /* Streamlit 제목 앵커 아이콘 */
+.xp-pick:first-child { border-top:1px solid #e3e5ea; }
+.xp-wrap h4.xp-name { margin:0; padding:0; font-size:0.95rem; font-weight:700; color:var(--text); line-height:1.4; }
+.xp-badge { display:inline-block; margin-left:6px; font-size:0.72rem; font-weight:600; padding:1px 7px;
+            border-radius:999px; background:#eef0f4; color:var(--text); vertical-align:1px; white-space:nowrap; }
+.xp-reason { font-size:0.86rem; color:var(--text); line-height:1.55; margin-top:4px; }
+.xp-caution, .xp-dissent { font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:3px; }
+.xp-caution b, .xp-dissent b { font-weight:600; color:var(--text); margin-right:4px; }
+.xp-metric { font-size:0.8rem; color:var(--text-muted); margin-top:6px; font-variant-numeric:tabular-nums; }
+.xp-metric b { font-weight:600; color:var(--text); }
+.xp-metric b span { font-weight:600; }
+.xp-metric .m { white-space:nowrap; }
+.xp-wrap details { margin-top:14px; font-size:0.85rem; color:var(--text); }
+.xp-wrap summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+                   font-size:0.85rem; font-weight:600; color:var(--text-muted); padding:6px 0; }
+.xp-wrap summary::-webkit-details-marker { display:none; }
+.xp-wrap summary::after { content:"›"; display:inline-block; transform:rotate(90deg); transition:transform .15s; }
+.xp-wrap details[open] summary::after { transform:rotate(-90deg); }
+.xp-wrap details ul { list-style:none; margin:4px 0 0; padding:0; }
+.xp-wrap details li { margin:0 !important; padding:8px 0 !important; border-top:1px solid #e3e5ea; line-height:1.6; }
+.xp-src { display:inline-flex; flex-wrap:wrap; gap:6px; margin-left:6px; vertical-align:middle; }
+.xp-wrap .xp-src a { display:inline-block; min-height:24px; line-height:22px; font-size:0.74rem; color:var(--text-muted);
+                     text-decoration:none; border:1px solid #d9dce2; border-radius:6px; padding:0 7px; background:#fff; }
+.xp-wrap .xp-src a:hover { color:var(--text); border-color:#b9bdc6; }
+.xp-note { font-size:0.75rem; color:var(--text-muted); line-height:1.6; max-width:68ch;
+           margin-top:12px; padding-top:10px; border-top:1px dashed #d9dce2; }
+@media (max-width: 900px) {
+  .xp-wrap { padding:16px 14px 14px; }
+  .xp-nav { display:flex; gap:6px; margin:0 0 10px; overflow-x:auto; scrollbar-width:none; }
+  .xp-nav::-webkit-scrollbar { display:none; }
+  .xp-wrap .xp-nav a { flex:0 0 auto; font-size:0.8rem; font-weight:600; color:var(--text); text-decoration:none;
+                       background:#fff; border:1px solid #d9dce2; border-radius:999px; padding:6px 12px; }
+  .xp-grid { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:10px;
+             margin-right:-14px; padding-right:14px; scrollbar-width:none; }
+  .xp-grid::-webkit-scrollbar { display:none; }
+  .xp-card { flex:0 0 82%; scroll-snap-align:start; padding:16px; scroll-margin-top:80px; }
+}
+"""
+
+
+def render_expert_picks(data: dict, df: pd.DataFrame) -> None:
+    """전문가 3인 합의 추천 — 문구는 json(expert_picks.py), 수치는 스냅샷에서 직접."""
+    e = html.escape
+    by_sym = df.set_index("Symbol")
+    n_experts = len(data["experts"])
+    votes = [p["votes"] for b in data["bundles"] for p in b["picks"]]
+    n_full = votes.count(n_experts)
+    consensus = (f"{len(votes)}종목 모두 {n_experts}명 전원 찬성" if n_full == len(votes)
+                 else f"전원 찬성 {n_full} · 다수 찬성 {len(votes) - n_full}")
+    cards, nav = [], []
+    for b in data["bundles"]:
+        items = []
+        for p in b["picks"]:
+            if p["symbol"] in by_sym.index:
+                row = by_sym.loc[p["symbol"]]
+                name = row["Name"]
+                # 1Y배당률 0 = 최근 1년 분배 기록 없음(TR형 재투자 또는 무분배)
+                div = (f'배당률 <b>{row["1Y배당률"]:.1f}%</b>' if row["1Y배당률"] > 0
+                       else "<b>1년 분배 없음</b>")
+                metrics = " · ".join(f'<span class="m">{m}</span>' for m in (
+                    div, f'1년 총수익(배당 포함) <b>{_signed_pct(row["1Y총수익률"])}</b>',
+                    f'시총 <b>{row["시총"]:,.0f}억</b>'))
+            else:
+                name, metrics = p["name"], "스냅샷 없음"
+            # 배지는 이견이 있을 때만 — 전원 찬성은 제목 옆 요약 한 번으로 충분
+            badge = ("" if p["votes"] == n_experts
+                     else f'<span class="xp-badge">{p["votes"]}/{n_experts} 찬성</span>')
+            extra = "".join(
+                f'<div class="xp-{cls}"><b>{label}</b>{e(p[key])}</div>'
+                for cls, label, key in (("caution", "유의", "caution"), ("dissent", "반대 의견", "dissent"))
+                if p.get(key))
+            items.append(
+                f'<li class="xp-pick"><h4 class="xp-name">{e(name)}{badge}</h4>'
+                f'<div class="xp-reason">{e(p["reason"])}</div>{extra}'
+                f'<div class="xp-metric">{metrics}</div></li>'
+            )
+        cid = f'xp-{e(b["key"])}'
+        nav.append(f'<a href="#{cid}">{e(b["title"])}</a>')
+        cards.append(
+            f'<article class="xp-card" id="{cid}"><h3 class="xp-title">{e(b["title"])}</h3>'
+            f'<div class="xp-target">{e(b["target"])}</div><ul class="xp-picks">{"".join(items)}</ul></article>'
+        )
+    views = "".join(
+        f'<li><b>{e(x["name"])}</b> {e(x["view"])}<span class="xp-src">'
+        + "".join(
+            f'<a href="{e(s["url"])}" target="_blank" rel="noopener" title="{e(s.get("title", ""))}"'
+            f' aria-label="{e(x["name"])} 출처: {e(_source_label(s))} (새 창)">{e(_source_label(s))} ↗</a>'
+            for s in x.get("sources", [])[:3])
+        + "</span></li>"
+        for x in data["experts"]
+    )
+    n_src = sum(min(len(x.get("sources", [])), 3) for x in data["experts"])
+    st.markdown(f"""<style>{XP_CSS}</style>
+<section class="xp-wrap" aria-label="AI 전문가 3인 합의 추천">
+<div class="xp-head"><h2 class="xp-h">AI 전문가 3인 합의 추천</h2>
+<span class="xp-date">주 1회 갱신 · {e(data["generated_at"][:10])} 논의 · {consensus}</span></div>
+<div class="xp-summary">{e(data["market_summary"])}</div>
+<div class="xp-disclaimer">거시·배당·위험관리 관점의 AI 전문가 3명이 제안·투표한 결과입니다. 정보 제공용이며 투자 권유가 아닙니다.</div>
+<nav class="xp-nav" aria-label="추천 묶음 바로가기">{"".join(nav)}</nav>
+<div class="xp-grid" tabindex="0" role="region" aria-label="추천 묶음 {len(cards)}개">{"".join(cards)}</div>
+<details><summary>전문가별 의견과 참고 출처 {n_src}건</summary><ul>{views}</ul></details>
+<div class="xp-note">선정 기준: 3명 중 2명 이상 찬성한 종목만 싣습니다. 수치는 최신 스냅샷 기준이며, 1년 총수익은 분배금을 포함합니다(아래 표의 1Y수익률은 가격 기준).</div>
+</section>""", unsafe_allow_html=True)
 
 
 def snapshot_mtime_kst() -> str:
@@ -387,6 +556,10 @@ tab1, tab2, tab3 = st.tabs(["ETF 상품 조회", "What-if 분석", "ETF 비교 �
 # ── Tab 1: ETF 상품 조회 ──────────────────────────
 
 with tab1:
+    expert = load_expert_picks()
+    if expert:
+        render_expert_picks(expert, final)
+
     st.subheader("ETF 상품 조회")
 
     col1, col2, col3 = st.columns(3)

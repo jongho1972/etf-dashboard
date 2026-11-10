@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .DS_Store
 .streamlit/secrets.toml
+expert_picks_preview.json
+expert_picks_failed.json
