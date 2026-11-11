@@ -110,20 +110,29 @@ XP_CSS = """
 .xp-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; }
 .xp-wrap a:focus-visible, .xp-wrap summary:focus-visible {
   outline:2px solid var(--text); outline-offset:2px; border-radius:6px; }
-.xp-card { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+.xp-card { background:var(--surface-2); border:1px solid var(--border); border-top:3px solid var(--accent);
+           border-radius:12px; padding:16px 18px; }
+.xp-card-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
 .xp-wrap h3.xp-title { margin:0; padding:0; font-size:1.05rem; font-weight:800; color:var(--text); }
+.xp-count { font-size:0.75rem; font-weight:600; color:var(--accent); white-space:nowrap; }
 .xp-target { font-size:0.8rem; color:var(--text-muted); margin:2px 0 4px; }
-.xp-card ul.xp-picks { list-style:none; margin:0; padding:0; }
-.xp-wrap li.xp-pick { border-top:1px solid var(--border); padding:12px 0 10px !important; margin:0 !important; }
+.xp-card ul.xp-picks { list-style:none; margin:0; padding:0; counter-reset:xp; }
+/* 종목마다 독립 타일 — 선 한 줄로만 나뉘면 종목 경계가 흐려져서(2026-11-11 사용자 피드백) */
+.xp-wrap li.xp-pick { counter-increment:xp; background:var(--bg); border:1px solid var(--border); border-radius:10px;
+                      padding:12px 14px !important; margin:10px 0 0 !important; }
 .xp-wrap [data-testid="stHeaderActionElements"] { display:none !important; }   /* Streamlit 제목 앵커 아이콘 */
-.xp-pick:first-child { border-top:1px solid var(--border-strong); }
 .xp-wrap h4.xp-name { margin:0; padding:0; font-size:0.95rem; font-weight:700; color:var(--text); line-height:1.4; }
+.xp-wrap h4.xp-name::before { content:counter(xp); display:inline-flex; align-items:center; justify-content:center;
+                      width:20px; height:20px; margin-right:7px; border-radius:50%; background:var(--accent-fill); color:#fff;
+                      font-size:0.72rem; font-weight:700; vertical-align:2px; font-variant-numeric:tabular-nums; }
 .xp-badge { display:inline-block; margin-left:6px; font-size:0.72rem; font-weight:600; padding:1px 7px;
             border-radius:999px; background:var(--surface); border:1px solid var(--border-strong); color:var(--text); vertical-align:1px; white-space:nowrap; }
 .xp-reason { font-size:0.86rem; color:var(--text-2); line-height:1.55; margin-top:4px; }
-.xp-caution, .xp-dissent { font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:3px; }
-.xp-caution b, .xp-dissent b { font-weight:600; color:var(--text); margin-right:4px; }
-.xp-metric { font-size:0.8rem; color:var(--text-muted); margin-top:6px; font-variant-numeric:tabular-nums; }
+.xp-caution, .xp-dissent { display:flex; gap:8px; align-items:baseline; font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:6px; }
+.xp-caution b, .xp-dissent b { flex:0 0 auto; font-size:0.7rem; font-weight:600; color:var(--text-2); padding:1px 7px;
+                               border:1px solid var(--border-strong); border-radius:5px; white-space:nowrap; }
+.xp-metric { font-size:0.8rem; color:var(--text-muted); margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-strong);
+             font-variant-numeric:tabular-nums; }
 .xp-metric b { font-weight:600; color:var(--text); }
 .xp-metric b span { font-weight:600; }
 .xp-metric .m { white-space:nowrap; }
@@ -150,8 +159,9 @@ XP_CSS = """
   .xp-nav::-webkit-scrollbar { display:none; }
   .xp-wrap .xp-nav a { flex:0 0 auto; font-size:0.8rem; font-weight:600; color:var(--text); text-decoration:none;
                        background:var(--surface-2); border:1px solid var(--border-strong); border-radius:999px; padding:6px 12px; }
-  .xp-grid { grid-template-columns:1fr; gap:12px; }   /* 모바일은 세로로 쌓고 칩은 해당 카드로 이동 */
-  .xp-card { padding:16px; scroll-margin-top:16px; }
+  .xp-grid { grid-template-columns:1fr; gap:18px; }   /* 모바일은 세로로 쌓고 칩은 해당 카드로 이동 */
+  .xp-card { padding:14px 12px; scroll-margin-top:16px; }
+  .xp-wrap li.xp-pick { padding:12px !important; }
 }
 """
 
@@ -197,7 +207,8 @@ def render_expert_picks(data: dict, df: pd.DataFrame) -> None:
         cid = f'xp-{e(b["key"])}'
         nav.append(f'<a href="#{cid}">{e(b["title"])}</a>')
         cards.append(
-            f'<article class="xp-card" id="{cid}"><h3 class="xp-title">{e(b["title"])}</h3>'
+            f'<article class="xp-card" id="{cid}"><div class="xp-card-head"><h3 class="xp-title">{e(b["title"])}</h3>'
+            f'<span class="xp-count">{len(items)}종목</span></div>'
             f'<div class="xp-target">{e(b["target"])}</div><ul class="xp-picks">{"".join(items)}</ul></article>'
         )
     views = "".join(
