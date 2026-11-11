@@ -74,6 +74,8 @@ GUARDRAIL = (
 N_INCOME, N_GROWTH, N_PER_CATEGORY = 30, 30, 5
 # 방어: 주식과 따로 움직이면서 변동이 과하지 않거나(금·장기채·리츠), 변동 자체가 작은 상품(채권·현금성)
 DEF_MAX_CORR, DEF_MAX_VOL, LOW_VOL_MAX = 0.3, 35, 8
+# 최근 부진: 3M 총수익률이 같은 분류 중앙값보다 이만큼(%p) 이상 낮으면 표시. 가산점이 아니라 원인 확인용 경고
+WEAK_GAP = -10
 
 
 def _same_product(name: pd.Series) -> pd.Series:
@@ -105,6 +107,8 @@ def build_candidates(df: pd.DataFrame) -> pd.DataFrame:
         "방어": d.index[((d["주식상관"] <= DEF_MAX_CORR) & (vol <= DEF_MAX_VOL)) | (vol <= LOW_VOL_MAX)],
     }
     d["주목"] = ["·".join(t for t, idx in tags.items() if i in idx) or "-" for i in d.index]
+    gap = d["3M총수익률"] - d.groupby("분류")["3M총수익률"].transform("median")
+    d["최근"] = (gap <= WEAK_GAP).map({True: "부진", False: "-"})
     return d.sort_values(["분류", "시총"], ascending=[True, False])
 
 
@@ -113,7 +117,8 @@ TABLE_COLS = {"Symbol": "코드", "Name": "상품명", "분류": "분류", "시�
               "1Y총수익률": "1Y총수익", "2Y연환산총수익률": "2Y연환산총수익(상장 2년 미만 -)",
               "3M총수익률": "3M총수익", "1Y변동성": "1Y변동성", "1Y최대낙폭": "1Y최대낙폭",
               "주식상관": "주식상관(KOSPI200·S&P500 중 큰 값)", "배당일": "배당주기",
-              "주목": "주목(배당=월배당 배당률 상위·성장=1Y·2Y·위험조정 상위·대표=분류별 시총 상위·방어=저상관·저변동)"}
+              "주목": "주목(배당=월배당 배당률 상위·성장=1Y·2Y·위험조정 상위·대표=분류별 시총 상위·방어=저상관·저변동)",
+              "최근": f"최근(부진=3M총수익이 같은 분류 중앙값보다 {-WEAK_GAP}%p 이상 낮음)"}
 
 
 def _cell(col, v) -> str:
@@ -180,7 +185,8 @@ def round1(expert, table, today):
     user = (
         f"오늘은 {today}(KST)다. 웹 검색으로 이번 주 금리·환율·주식시장 상황과 당신 관점에서 중요한 뉴스를 확인하라(검색은 꼭 필요한 만큼만).\n"
         "그다음 아래 후보 표에서만 골라 묶음별로 2~4개 종목을 제안하라. 표에 없는 종목은 제안하지 않는다. "
-        "수익률만 보지 말고 2년 성과·변동성·최대낙폭·주식상관(낮을수록 주식과 따로 움직임)도 함께 따진다. '주목' 열은 참고 표시일 뿐이며 표시가 없는 종목도 똑같이 고를 수 있다.\n\n"
+        "수익률만 보지 말고 2년 성과·변동성·최대낙폭·주식상관(낮을수록 주식과 따로 움직임)도 함께 따진다. '주목' 열은 참고 표시일 뿐이며 표시가 없는 종목도 똑같이 고를 수 있다. "
+        "'최근' 열이 부진인 종목은 일시적 시장 흐름 때문인지 구조적 문제(분배금 축소·지수 변경·업황 훼손 등) 때문인지 확인하고, 제안한다면 이유에 그 판단을 밝힌다.\n\n"
         f"[묶음]\n{bundles_brief()}\n\n[후보 표 — 대시보드 스냅샷]\n{table}\n\n"
         "출력 형식(한국어, 간결하게):\n"
         "## 시장 판단\n2~3문장\n"
@@ -229,7 +235,7 @@ def round2(expert, r1_all, ballot, table):
         f"패널 3명의 1라운드 의견:\n{others}\n\n[후보 표]\n{table}\n\n"
         f"[투표 대상 — 묶음키 | 코드 | 상품명]\n{ballot}\n\n"
         "투표 대상의 모든 줄에 대해, 그 종목이 해당 묶음의 목적에 맞는 추천으로 적절한지 당신 관점에서 찬성/반대를 정하라. "
-        "같은 묶음에 비슷한 상품이 겹치면 더 나은 쪽만 찬성한다. reason은 한국어 1문장(40자 안팎)."
+        "같은 묶음에 비슷한 상품이 겹치면 더 나은 쪽만 찬성한다. 후보 표 '최근' 열이 부진인 종목은 부진 원인이 해소될 일시적 요인인지도 따진다. reason은 한국어 1문장(40자 안팎)."
     )
     resp, _ = call(system, user, schema=VOTE_SCHEMA)
     return {"expert": expert, "votes": json.loads(_text(resp))["votes"]}
@@ -282,13 +288,14 @@ WRITE_SCHEMA = {
 }
 
 
-def write_cards(r1_all, final):
+def write_cards(r1_all, final, weak_syms):
     lines = []
     for b, lst in final.items():
         for p in lst:
             yes = "; ".join(f"{n}: {r}" for n, r in p["yes"])
             no = "; ".join(f"{n}: {r}" for n, r in p["no"]) or "없음"
-            lines.append(f"{b} | {p['symbol']} | {p['name']} | 찬성 {p['votes']}/3\n  찬성: {yes}\n  반대: {no}")
+            weak = " | 최근 부진" if p["symbol"] in weak_syms else ""
+            lines.append(f"{b} | {p['symbol']} | {p['name']} | 찬성 {p['votes']}/3{weak}\n  찬성: {yes}\n  반대: {no}")
     r1 = "\n\n".join(f"### {r['expert']['name']}\n{r['text']}" for r in r1_all)
     system = "당신은 ETF 추천 패널의 편집자다. 전문가 의견을 일반 투자자가 읽기 쉬운 한국어로 다듬는다. " + GUARDRAIL
     user = (
@@ -297,7 +304,7 @@ def write_cards(r1_all, final):
         "- market_summary: 이번 주 시장 판단 1문장(60자 이내)\n"
         "- expert_views: 전문가별 핵심 의견 1문장(60자 이내), key는 macro/income/risk\n"
         "- picks: 위 통과 종목 전부. reason은 이 묶음에 맞는 강점 1문장(50자 이내, 위험은 넣지 않음), "
-        "caution은 투자 전 유의할 위험 1문장(40자 이내, 없으면 빈 문자열), "
+        "caution은 투자 전 유의할 위험 1문장(40자 이내, 없으면 빈 문자열, '최근 부진' 표시 종목은 반드시 최근 부진과 그 원인을 담는다), "
         "dissent는 반대 의견 1문장(반대가 없으면 빈 문자열, 화면에 '반대 의견' 라벨이 붙으므로 '~반대 의견이 있습니다'로 끝내지 않는다)\n"
         "- 수치는 쓰지 않는다(화면이 최신 수치를 따로 보여준다).\n"
         "- 문장 끝은 대시보드 문구와 같은 존칭으로 통일한다(예: '~에 적합합니다', '~위험이 있습니다').\n"
@@ -357,7 +364,8 @@ def main(dry_run=False):
     final = tally(r2_all, proposals, names)
     print("합의 통과:", {b: [p["name"] for p in v] for b, v in final.items()})
 
-    text = write_cards(r1_all, final)
+    weak_syms = set(cand.loc[cand["최근"] == "부진", "Symbol"])
+    text = write_cards(r1_all, final, weak_syms)
     reasons = {(p["bundle"], p["symbol"]): p for p in text["picks"]}
     views = {v["key"]: v["view"] for v in text["expert_views"]}
     src = {r["expert"]["key"]: r["sources"] for r in r1_all}
