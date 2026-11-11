@@ -24,7 +24,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: |
+            requirements.txt
+            requirements-ci.txt
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -40,6 +42,11 @@ jobs:
       - name: Build snapshot (확정 종가 기준)
         run: python build_snapshot.py
 
+      # 설계 조건 점검·월간 재최적화(default_guard.py)용. 대시보드 이미지엔 불필요해 여기서만 설치
+      - name: Install optimizer dependency
+        continue-on-error: true
+        run: pip install -r requirements-ci.txt
+
       # 실패해도(대체 후보 없는 상장폐지 등) 스냅샷 커밋·배포는 계속하고, 디폴트는 기존 값 유지
       - name: Review What-if default
         continue-on-error: true
@@ -48,14 +55,14 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_RECIPIENTS: ${{ secrets.MAIL_RECIPIENTS }}
           LIST_UPDATE_OUTCOME: ${{ steps.list.outcome }}
-        run: python select_default.py --mail
+        run: python select_default.py --mail --guard
 
       - name: Commit & push if changed
         id: commit
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add etf_data.parquet default_portfolio.json etf_list.csv snapshot_report.json
+          git add etf_data.parquet default_portfolio.json etf_list.csv snapshot_report.json guard_state.json
           if git diff --cached --quiet; then
             echo "No snapshot changes."
             echo "pushed=false" >> "$GITHUB_OUTPUT"

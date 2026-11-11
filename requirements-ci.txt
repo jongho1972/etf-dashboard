@@ -1,0 +1,2 @@
+# GitHub Actions 전용(디폴트 재최적화 default_guard.py). 대시보드 이미지엔 설치하지 않는다
+scipy==1.17.1

@@ -21,6 +21,9 @@ snapshot.yml이 `build_snapshot.py` 직후 실행한다. 구조(슬롯별 컨셉
 종목(snapshot_report.json) 중 슬롯 후보 풀에 드는 것만 경고에 넣는다. 디폴트와 무관한 누락은
 실행 요약에만 참고로 남기고 메일은 보내지 않는다.
 
+설계 조건 점검(원금 유지·하락기 손실 상한)과 월 1회 비중 재최적화 제안은 default_guard.py가 맡는다
+(--guard 플래그일 때만, scipy 필요). 재최적화 결과는 메일 제안만 하고 json은 바꾸지 않는다.
+
 교체·경고가 있으면 GMAIL_* 환경변수로 메일을 보낸다. 대체 후보 없이 종목이 사라지는 등
 안전 점검에 실패하면 json을 건드리지 않고 알림 메일을 보낸 뒤 비정상 종료한다.
 """
@@ -220,6 +223,7 @@ def main() -> int:
     cfg = json.loads(DEFAULT_JSON.read_text(encoding="utf-8"))
     as_of = str(df["기준일"].max())
     mail = "--mail" in sys.argv
+    guard = "--guard" in sys.argv
 
     try:
         changes, warnings = review(df, cfg)
@@ -240,6 +244,11 @@ def main() -> int:
     summary += [f"- {c['from']} → **{c['to']}** ({c['reason']})" for c in changes]
     if not changes:
         summary.append(f"- 교체 없음 ({len(cfg['slots'])}개 슬롯 모두 유지)")
+    if guard:
+        import default_guard  # default_guard가 select_default를 import하므로 순환을 피해 여기서 불러온다
+        guard_lines, guard_alerts = default_guard.run(cfg, df.set_index("Name"), as_of)
+        summary += guard_lines
+        warnings += guard_alerts
     summary.append("- 노출 그룹: " + " · ".join(f"{k} {v:g}%" for k, v in exposure_shares(cfg).most_common()))
     summary += [f"- ⚠️ {w}" for w in warnings]
     summary += [f"- 참고: {n}" for n in notes]
