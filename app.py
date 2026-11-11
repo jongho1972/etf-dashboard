@@ -127,6 +127,9 @@ XP_CSS = """
 .xp-metric b { font-weight:600; color:var(--text); }
 .xp-metric b span { font-weight:600; }
 .xp-metric .m { white-space:nowrap; }
+.xp-wrap .xp-metric a.xp-info { display:inline-block; margin-left:8px; min-height:24px; line-height:22px; font-size:0.74rem;
+                     color:var(--accent); text-decoration:none; border:1px solid var(--border-strong); border-radius:6px; padding:0 7px; white-space:nowrap; }
+.xp-wrap .xp-metric a.xp-info:hover { border-color:var(--accent); }
 .xp-wrap details { margin-top:14px; font-size:0.85rem; color:var(--text); }
 .xp-wrap summary { list-style:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer;
                    font-size:0.85rem; font-weight:600; color:var(--text-muted); padding:6px 0; }
@@ -184,10 +187,12 @@ def render_expert_picks(data: dict, df: pd.DataFrame) -> None:
                 f'<div class="xp-{cls}"><b>{label}</b>{e(p[key])}</div>'
                 for cls, label, key in (("caution", "유의", "caution"), ("dissent", "반대 의견", "dissent"))
                 if p.get(key))
+            info = (f'<a class="xp-info" href="https://www.k-etf.com/etf/{e(p["symbol"])}" target="_blank"'
+                    f' rel="noopener" aria-label="{e(name)} 상품정보 (새 창)">상품정보 ↗</a>')
             items.append(
                 f'<li class="xp-pick"><h4 class="xp-name">{e(name)}{badge}</h4>'
                 f'<div class="xp-reason">{e(p["reason"])}</div>{extra}'
-                f'<div class="xp-metric">{metrics}</div></li>'
+                f'<div class="xp-metric">{metrics}{info}</div></li>'
             )
         cid = f'xp-{e(b["key"])}'
         nav.append(f'<a href="#{cid}">{e(b["title"])}</a>')
