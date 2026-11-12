@@ -24,8 +24,9 @@ snapshot.yml이 `build_snapshot.py` 직후 실행한다. 구조(슬롯별 컨셉
 설계 조건 점검(원금 유지·하락기 손실 상한)과 월 1회 비중 재최적화 제안은 default_guard.py가 맡는다
 (--guard 플래그일 때만, scipy 필요). 재최적화 결과는 메일 제안만 하고 json은 바꾸지 않는다.
 
-교체·경고가 있으면 GMAIL_* 환경변수로 메일을 보낸다. 대체 후보 없이 종목이 사라지는 등
-안전 점검에 실패하면 json을 건드리지 않고 알림 메일을 보낸 뒤 비정상 종료한다.
+교체·경고가 있으면 TELEGRAM_* 환경변수로 텔레그램 알림을 보내고, 텔레그램 설정이 없거나 전송에
+실패할 때만 GMAIL_* 환경변수로 메일을 보낸다. 대체 후보 없이 종목이 사라지는 등 안전 점검에
+실패하면 json을 건드리지 않고 알림을 보낸 뒤 비정상 종료한다.
 """
 from __future__ import annotations
 
@@ -33,6 +34,8 @@ import json
 import os
 import smtplib
 import sys
+import urllib.parse
+import urllib.request
 from collections import Counter
 from email.message import EmailMessage
 from functools import cache
@@ -200,6 +203,27 @@ def validate(cfg: dict) -> None:
         raise FatalReview(f"노출 그룹 비중 상한 {limit}% 초과: {over}")
 
 
+def send_telegram(subject: str, lines: list[str]) -> bool:
+    token, chat_id = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if not (token and chat_id):
+        print("텔레그램 설정 없음")
+        return False
+    text = "\n".join([subject, "", *lines, "", "https://etf.jhawk.kr"])[:4096]
+    data = urllib.parse.urlencode({"chat_id": chat_id, "text": text}).encode()
+    try:
+        with urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", data, timeout=20) as r:
+            return json.load(r).get("ok", False)
+    except Exception as e:  # 토큰이 로그에 남지 않도록 예외 종류만 출력
+        print(f"텔레그램 발송 실패: {type(e).__name__}")
+        return False
+
+
+def notify(subject: str, lines: list[str]) -> None:
+    """텔레그램 우선, 실패하면 메일로 대체."""
+    if not send_telegram(subject, lines):
+        send_mail(subject, lines)
+
+
 def send_mail(subject: str, lines: list[str]) -> None:
     user, pw, to = (os.environ.get(k) for k in ("GMAIL_USER", "GMAIL_APP_PASSWORD", "MAIL_RECIPIENTS"))
     if not (user and pw and to):
@@ -233,7 +257,7 @@ def main() -> int:
     except FatalReview as e:
         print(f"디폴트 점검 중단: {e}")
         if mail:
-            send_mail(f"[ETF] 디폴트 자동 점검 실패 ({as_of})", [f"기존 디폴트를 유지했습니다. 사유: {e}"])
+            notify(f"[ETF] 디폴트 자동 점검 실패 ({as_of})", [f"기존 디폴트를 유지했습니다. 사유: {e}"])
         return 1
 
     if changes:
@@ -263,7 +287,7 @@ def main() -> int:
             lines += [f"[{c['group']} · {c['amount'] // 10**6:,}백만원]",
                       f"  {c['from']} → {c['to']}", f"  사유: {c['reason']}", ""]
         lines += [f"[경고] {w}" for w in warnings]
-        send_mail(f"[ETF] 디폴트 교체 {len(changes)}건 · 경고 {len(warnings)}건 ({as_of})", lines)
+        notify(f"[ETF] 디폴트 교체 {len(changes)}건 · 경고 {len(warnings)}건 ({as_of})", lines)
     return 0
 
 

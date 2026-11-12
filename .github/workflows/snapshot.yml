@@ -32,7 +32,7 @@ jobs:
         run: pip install -r requirements.txt
 
       # 시총·신규 상장·상장폐지 반영. 네이버 차단 등으로 실패하면 기존 목록으로 계속 진행하고
-      # select_default.py가 메일로 경고한다
+      # select_default.py가 텔레그램(실패 시 메일)으로 경고한다
       - name: Update ETF list
         id: list
         continue-on-error: true
@@ -54,6 +54,8 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_RECIPIENTS: ${{ secrets.MAIL_RECIPIENTS }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LIST_UPDATE_OUTCOME: ${{ steps.list.outcome }}
         run: python select_default.py --mail --guard
 
