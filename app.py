@@ -222,14 +222,14 @@ def render_expert_picks(data: dict, df: pd.DataFrame) -> None:
     )
     n_src = sum(min(len(x.get("sources", [])), 3) for x in data["experts"])
     st.markdown(f"""<style>{XP_CSS}</style>
-<section class="xp-wrap" aria-label="AI 전문가 3인 합의 추천">
-<div class="xp-head"><h2 class="xp-h">AI 전문가 3인 합의 추천</h2>
+<section class="xp-wrap" aria-label="AI Agent 3인 합의 추천">
+<div class="xp-head"><h2 class="xp-h">AI Agent 3인 합의 추천</h2>
 <span class="xp-date">주 1회 갱신 · {e(data["generated_at"][:10])} 논의 · {consensus}</span></div>
 <div class="xp-summary">{e(data["market_summary"])}</div>
-<div class="xp-disclaimer">거시·배당·위험관리 관점의 AI 전문가 3명이 제안·투표한 결과입니다. 정보 제공용이며 투자 권유가 아닙니다.</div>
+<div class="xp-disclaimer">거시·배당·위험관리 관점의 AI Agent 3명이 제안·투표한 결과입니다. 정보 제공용이며 투자 권유가 아닙니다.</div>
 <nav class="xp-nav" aria-label="추천 묶음 바로가기">{"".join(nav)}</nav>
 <div class="xp-grid" role="region" aria-label="추천 묶음 {len(cards)}개">{"".join(cards)}</div>
-<details><summary>전문가별 의견과 참고 출처 {n_src}건</summary><ul>{views}</ul></details>
+<details><summary>Agent별 의견과 참고 출처 {n_src}건</summary><ul>{views}</ul></details>
 <div class="xp-note">선정 기준: 3명 중 2명 이상 찬성한 종목만 싣습니다. 수치는 최신 스냅샷 기준이며, 1년 총수익은 분배금을 포함합니다(아래 표의 1Y수익률은 가격 기준).</div>
 </section>""", unsafe_allow_html=True)
 
