@@ -1,87 +1,87 @@
 {
-  "asof": "2026-11-10",
-  "generated_at": "2026-11-11 11:42",
+  "asof": "2026-11-13",
+  "generated_at": "2026-11-14 12:47",
   "model": "claude-opus-5-5",
-  "market_summary": "금리 인상 기조 속 주가 급락으로 현금성·우량채권의 매력이 커진 국면입니다.",
+  "market_summary": "외국인 대규모 매도로 국내 증시가 급락한 뒤 반등이 이어지지 못했습니다.",
   "experts": [
     {
       "key": "macro",
       "name": "거시·자산배분",
-      "view": "금리 인상 수혜 현금성 자산과 우량채, 미국 주식 분산이 유리합니다.",
+      "view": "국내 주식 변동성이 커 주식과 상관이 낮은 자산과 현금성 자산이 매력적입니다.",
       "sources": [
         {
-          "title": "미국 10년 만기 국채 수익률 - 가격 - 차트 - 지난 데이터 - 뉴스",
-          "url": "https://ko.tradingeconomics.com/united-states/government-bond-yield"
+          "title": "\"개미들 잠 못 잔다\"…코스피 11.71% 급락, 증권가 전망은 - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611080800306344"
         },
         {
-          "title": "해외시황 - 유안타증권",
-          "url": "https://www.myasset.com/myasset/research/rs_global/RS_0401000_M.cmd?glblGubun=KS"
+          "title": "코스피 반등할까… 美 물가지표에 주목 [주간 증시 전망] - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611081758240399"
         },
         {
-          "title": "11월에도 기준금리 0.25% 올린 ‘3.25%’ 예상 < 은행·증권 < 스마트금융 < 기사본문 - 중소기업투데이",
-          "url": "http://www.sbiztoday.kr/news/articleView.html?idxno=27384"
+          "title": "코스피 시세 📈 - 실시간 차트 · 시세 전망 · 투자정보",
+          "url": "https://alphasquare.co.kr/home/stock-summary?code=kospi"
         },
         {
-          "title": "KOSPI 과거 금리 - Investing.com",
-          "url": "https://kr.investing.com/indices/kospi-historical-data"
+          "title": "'블루 웨이브 쇼크'에 휘청인 코스피…반등 열쇠는 [주간전망]",
+          "url": "https://www.hankyung.com/article/2026110609346"
         },
         {
-          "title": "채권·금리 - 데이터센터 - 한국경제",
-          "url": "https://datacenter.hankyung.com/rates-bonds"
+          "title": "실시간 시장요약",
+          "url": "https://alphasquare.co.kr/home/market-summary"
         }
       ]
     },
     {
       "key": "income",
       "name": "배당·인컴",
-      "view": "주식과 같이 움직이는 커버드콜보다 단기금리형과 저상관 배당주가 낫습니다.",
+      "view": "고분배 상품도 급락장에서는 원금과 분배금이 줄 수 있어 지속성이 중요합니다.",
       "sources": [
         {
-          "title": "코스피, 보합권 등락...코스닥은 오름세",
-          "url": "https://www.newspim.com/news/view/20261111000316"
+          "title": "코스피, 美 빅스텝 우려 누르고 이틀째 상승…5300선 안착 - 글로벌이코노믹",
+          "url": "https://www.g-enews.com/article/Securities/2026/11/202611111551015694923c501012_1"
         },
         {
-          "title": "증시 반등에 원/달러 환율 이틀째 하락…1330원대 재진입 - 머니투데이",
-          "url": "https://www.mt.co.kr/economy/2026/11/10/2026111016284356804"
+          "title": "코스피 반등할까… 美 물가지표에 주목 [주간 증시 전망] - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611081758240399"
         },
         {
-          "title": "물가는 3% 육박, 코스피는 5000선 위태…금리 결정 앞둔 한은 딜레마 - 파이낸셜뉴스",
-          "url": "https://www.fnnews.com/news/202611080705352845"
+          "title": "\"개미들 잠 못 잔다\"…코스피 11.71% 급락, 증권가 전망은 - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611080800306344"
         },
         {
-          "title": "코스피, 美 12월 금리 인상 경계 속 상승 전환…코스닥 2%대 강세 < 경제·금융 < 경제·금융 < 기사본문 - 인더스트리뉴스",
-          "url": "https://www.industrynews.co.kr/news/articleView.html?idxno=89276"
+          "title": "[주간증시전망] 코스피, 美금리·AI 전망에 좌우…엔비디아 실적·앤트로픽 상장",
+          "url": "https://www.ajunews.com/view/20261114014700961"
         },
         {
-          "title": "2026 South Korean by-elections",
-          "url": "https://en.wikipedia.org/wiki/2026_South_Korean_by-elections"
+          "title": "실시간 시장요약",
+          "url": "https://alphasquare.co.kr/home/market-summary"
         }
       ]
     },
     {
       "key": "risk",
       "name": "위험관리",
-      "view": "고분배 상품의 원금 훼손과 환노출 해외자산의 원화 강세 위험에 유의해야 합니다.",
+      "view": "테마형과 고분배 커버드콜은 피하고 낙폭이 작은 자산 위주로 구성했습니다.",
       "sources": [
         {
-          "title": "코스피 5200선 보합권 공방…美 CPI·매파 발언에 관망세",
-          "url": "https://www.sentv.co.kr/article/view/sentv202611110040"
+          "title": "\"개미들 잠 못 잔다\"…코스피 11.71% 급락, 증권가 전망은 - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611080800306344"
         },
         {
-          "title": "물가는 3% 육박, 코스피는 5000선 위태…금리 결정 앞둔 한은 딜레마 - 파이낸셜뉴스",
-          "url": "https://www.fnnews.com/news/202611080705352845"
+          "title": "코스피 반등할까… 美 물가지표에 주목 [주간 증시 전망] - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611081758240399"
         },
         {
-          "title": "코스피, 장초반 5200선 약보합…코스닥 3%대 상승",
-          "url": "https://news.mtn.co.kr/article/2026111109332778776"
+          "title": "코스피 시세 📈 - 실시간 차트 · 시세 전망 · 투자정보",
+          "url": "https://alphasquare.co.kr/home/stock-summary?code=kospi"
         },
         {
-          "title": "환율",
-          "url": "https://www.truefriend.com/main/research/research/Exchange.jsp"
+          "title": "'블루 웨이브 쇼크'에 휘청인 코스피…반등 열쇠는 [주간전망]",
+          "url": "https://www.hankyung.com/article/2026110609346"
         },
         {
-          "title": "코스피, 美 12월 금리 인상 경계 속 상승 전환…코스닥 2%대 강세 < 경제·금융 < 경제·금융 < 기사본문 - 인더스트리뉴스",
-          "url": "https://www.industrynews.co.kr/news/articleView.html?idxno=89276"
+          "title": "실시간 시장요약",
+          "url": "https://alphasquare.co.kr/home/market-summary"
         }
       ]
     }
@@ -96,25 +96,25 @@
           "symbol": "466940",
           "name": "TIGER 은행고배당플러스TOP10",
           "votes": 3,
-          "reason": "금리 인상기 은행 예대마진 개선이 배당 재원을 받쳐 주는 점이 강점입니다.",
-          "caution": "은행업종에 집중되어 업황 변화 위험이 있습니다.",
+          "reason": "은행 이익과 주주환원에 기반해 분배가 이어지기 쉬운 점이 강점입니다.",
+          "caution": "은행 업종에 집중돼 업황 변화에 민감할 위험이 있습니다.",
+          "dissent": ""
+        },
+        {
+          "symbol": "458760",
+          "name": "TIGER 미국배당다우존스타겟커버드콜2호",
+          "votes": 3,
+          "reason": "높은 분배에도 총수익으로 충당해 원금이 유지된 점이 강점입니다.",
+          "caution": "커버드콜 구조라 급반등 때 상승폭이 제한됩니다.",
           "dissent": ""
         },
         {
           "symbol": "458730",
           "name": "TIGER 미국배당다우존스",
           "votes": 2,
-          "reason": "커버드콜 없이 배당 성장과 상승 여력을 함께 누리는 월배당에 적합합니다.",
-          "caution": "환노출형이라 원화 강세 시 손실 위험이 있습니다.",
-          "dissent": "분배 목적이라면 같은 지수의 커버드콜형이 더 맞아 중복을 피하는 편이 낫다는 의견입니다."
-        },
-        {
-          "symbol": "251600",
-          "name": "PLUS 고배당주채권혼합",
-          "votes": 2,
-          "reason": "고배당주와 채권을 섞어 안정적인 월분배 현금흐름이 강점입니다.",
-          "caution": "채권 비중 탓에 상승장 성과가 제한될 수 있습니다.",
-          "dissent": "총수익이 분배율을 겨우 웃돌아 원금 성장 여력이 작다는 의견입니다."
+          "reason": "커버드콜이 아니어서 배당 성장과 원금 성장을 함께 노리기에 적합합니다.",
+          "caution": "환노출형이라 원화 강세 때 원화 수익이 줄 수 있습니다.",
+          "dissent": "TIGER 미국배당다우존스타겟커버드콜2호와 같은 지수를 기초로 해 묶음 안에서 노출이 중복됩니다."
         }
       ]
     },
@@ -124,20 +124,20 @@
       "target": "10년 이상 길게 모아갈 분",
       "picks": [
         {
-          "symbol": "278530",
-          "name": "KODEX 200TR",
-          "votes": 3,
-          "reason": "배당을 자동 재투자하는 저비용 대표지수형으로 장기 복리에 적합합니다.",
-          "caution": "변동성과 최대낙폭이 커 급락 위험이 있습니다.",
-          "dissent": ""
-        },
-        {
           "symbol": "360750",
           "name": "TIGER 미국S&P500",
           "votes": 3,
-          "reason": "유동성이 큰 미국 대표지수형으로 장기 성장 중심축에 적합합니다.",
-          "caution": "환노출형이라 원화 강세 시 수익이 줄 수 있습니다.",
+          "reason": "변동성이 낮은 저비용 대표 지수형이라 장기 성장의 핵심 축에 적합합니다.",
+          "caution": "환노출형이라 원화 강세 때 수익이 깎일 위험이 있습니다.",
           "dissent": ""
+        },
+        {
+          "symbol": "278530",
+          "name": "KODEX 200TR",
+          "votes": 2,
+          "reason": "분배금을 자동 재투자하는 구조라 장기 복리 축적에 적합합니다.",
+          "caution": "변동성과 낙폭이 매우 커 장기 보유 여력이 필요합니다.",
+          "dissent": "RISE 코리아밸류업과 겹치면서 변동성과 낙폭은 더 큰 편입니다."
         }
       ]
     },
@@ -147,25 +147,50 @@
       "target": "변동성을 줄이거나 대기 자금을 둘 분",
       "picks": [
         {
-          "symbol": "273130",
-          "name": "KODEX 종합채권(AA-이상)액티브",
-          "votes": 3,
-          "reason": "주식과 거의 따로 움직여 주가 급락 때 완충 역할을 한 점이 강점입니다.",
-          "caution": "금리가 크게 오르면 가격이 하락할 위험이 있습니다.",
-          "dissent": ""
-        },
-        {
           "symbol": "459580",
           "name": "KODEX CD금리액티브(합성)",
           "votes": 3,
-          "reason": "기준금리 인상이 곧바로 반영되는 초저변동 현금성 자산에 적합합니다.",
-          "caution": "금리가 내리면 분배금도 함께 줄어듭니다.",
+          "reason": "가격 변동이 거의 없고 금리 상승 시 수익도 따라 올라 현금성 완충에 적합합니다.",
+          "caution": "합성 구조라 거래상대방 위험이 있습니다.",
           "dissent": ""
+        },
+        {
+          "symbol": "273130",
+          "name": "KODEX 종합채권(AA-이상)액티브",
+          "votes": 3,
+          "reason": "주식과 상관이 낮고 급락기에도 오르며 완충 역할이 확인된 점이 강점입니다.",
+          "caution": "금리가 더 오르면 평가손실이 날 위험이 있습니다.",
+          "dissent": ""
+        },
+        {
+          "symbol": "452360",
+          "name": "SOL 미국배당다우존스(H)",
+          "votes": 2,
+          "reason": "주식과 상관이 낮은 환헤지형으로 하락장에서 방어력을 보인 점이 강점입니다.",
+          "caution": "주식형이라 시장 하락 시 손실 위험이 남아 있습니다.",
+          "dissent": "주식형이라 하락 위험이 남고 인컴 묶음의 다우존스 배당 상품과 노출이 겹칩니다."
         }
       ]
     }
   ],
   "history": [
+    {
+      "date": "2026-11-14",
+      "added": [
+        "SOL 미국배당다우존스(H)",
+        "TIGER 미국배당다우존스타겟커버드콜2호"
+      ],
+      "removed": [
+        "PLUS 고배당주채권혼합"
+      ],
+      "_added_syms": [
+        "452360",
+        "458760"
+      ],
+      "_removed_syms": [
+        "251600"
+      ]
+    },
     {
       "date": "2026-11-11",
       "added": [
