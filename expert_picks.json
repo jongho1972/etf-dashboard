@@ -1,87 +1,87 @@
 {
-  "asof": "2026-11-13",
-  "generated_at": "2026-11-14 12:47",
+  "asof": "2026-11-20",
+  "generated_at": "2026-11-21 13:30",
   "model": "claude-opus-5-5",
-  "market_summary": "외국인 대규모 매도로 국내 증시가 급락한 뒤 반등이 이어지지 못했습니다.",
+  "market_summary": "반도체 급락으로 국내 주식이 크게 흔들리고 채권이 강세를 보였습니다.",
   "experts": [
     {
       "key": "macro",
       "name": "거시·자산배분",
-      "view": "국내 주식 변동성이 커 주식과 상관이 낮은 자산과 현금성 자산이 매력적입니다.",
+      "view": "원화 강세 국면이라 환헤지형과 국내 채권을 함께 담는 분산에 적합합니다.",
       "sources": [
         {
           "title": "\"개미들 잠 못 잔다\"…코스피 11.71% 급락, 증권가 전망은 - 파이낸셜뉴스",
           "url": "https://www.fnnews.com/news/202611080800306344"
         },
         {
-          "title": "코스피 반등할까… 美 물가지표에 주목 [주간 증시 전망] - 파이낸셜뉴스",
-          "url": "https://www.fnnews.com/news/202611081758240399"
+          "title": "코스피 - 시장종합 - 한국경제",
+          "url": "https://markets.hankyung.com/indices/kospi"
         },
         {
-          "title": "코스피 시세 📈 - 실시간 차트 · 시세 전망 · 투자정보",
-          "url": "https://alphasquare.co.kr/home/stock-summary?code=kospi"
+          "title": "코스피/역사/2026년 - 나무위키",
+          "url": "https://namu.wiki/w/%EC%BD%94%EC%8A%A4%ED%94%BC/%EC%97%AD%EC%82%AC/2026%EB%85%84"
         },
         {
-          "title": "'블루 웨이브 쇼크'에 휘청인 코스피…반등 열쇠는 [주간전망]",
-          "url": "https://www.hankyung.com/article/2026110609346"
+          "title": "[주간증시전망] 반도체 충격에 4900선 무너진 코스피…다음주 美 물가·한은 금통위 '변동성 주의보' : 네이트 뉴스",
+          "url": "https://m.news.nate.com/view/20261121n01342"
         },
         {
-          "title": "실시간 시장요약",
-          "url": "https://alphasquare.co.kr/home/market-summary"
+          "title": "2022.06.05. 코스피(KOSPI) 4시간 관점",
+          "url": "https://in.tradingview.com/chart/KOSPI/cmv5kNnR"
         }
       ]
     },
     {
       "key": "income",
       "name": "배당·인컴",
-      "view": "고분배 상품도 급락장에서는 원금과 분배금이 줄 수 있어 지속성이 중요합니다.",
+      "view": "고분배 커버드콜보다 원금이 덜 깎인 꾸준한 분배 상품이 유리합니다.",
       "sources": [
         {
-          "title": "코스피, 美 빅스텝 우려 누르고 이틀째 상승…5300선 안착 - 글로벌이코노믹",
-          "url": "https://www.g-enews.com/article/Securities/2026/11/202611111551015694923c501012_1"
+          "title": "엔비디아 실적발표에 쏠리는 눈...앤스로픽 상장까지[주간증시전망] - 파이낸셜뉴스",
+          "url": "https://www.fnnews.com/news/202611150129458878"
         },
         {
-          "title": "코스피 반등할까… 美 물가지표에 주목 [주간 증시 전망] - 파이낸셜뉴스",
-          "url": "https://www.fnnews.com/news/202611081758240399"
+          "title": "코스피",
+          "url": "https://m.finance.daum.net/domestic"
         },
         {
-          "title": "\"개미들 잠 못 잔다\"…코스피 11.71% 급락, 증권가 전망은 - 파이낸셜뉴스",
-          "url": "https://www.fnnews.com/news/202611080800306344"
+          "title": "코스피 - 시장종합 - 한국경제",
+          "url": "https://markets.hankyung.com/indices/kospi"
         },
         {
-          "title": "[주간증시전망] 코스피, 美금리·AI 전망에 좌우…엔비디아 실적·앤트로픽 상장",
-          "url": "https://www.ajunews.com/view/20261114014700961"
+          "title": "코스피/역사/2026년 - 나무위키",
+          "url": "https://namu.wiki/w/%EC%BD%94%EC%8A%A4%ED%94%BC/%EC%97%AD%EC%82%AC/2026%EB%85%84"
         },
         {
-          "title": "실시간 시장요약",
-          "url": "https://alphasquare.co.kr/home/market-summary"
+          "title": "‘검은 금요일’ 코스피 5.21% 폭락… 10개월 만에 최저",
+          "url": "https://seoul.co.kr/news/economy/2026/11/20/20261120500275"
         }
       ]
     },
     {
       "key": "risk",
       "name": "위험관리",
-      "view": "테마형과 고분배 커버드콜은 피하고 낙폭이 작은 자산 위주로 구성했습니다.",
+      "view": "반도체 쏠림과 같은 지수 중복을 피하고 낙폭이 작은 상품이 적합합니다.",
       "sources": [
         {
           "title": "\"개미들 잠 못 잔다\"…코스피 11.71% 급락, 증권가 전망은 - 파이낸셜뉴스",
           "url": "https://www.fnnews.com/news/202611080800306344"
         },
         {
-          "title": "코스피 반등할까… 美 물가지표에 주목 [주간 증시 전망] - 파이낸셜뉴스",
-          "url": "https://www.fnnews.com/news/202611081758240399"
+          "title": "코스피 - 시장종합 - 한국경제",
+          "url": "https://markets.hankyung.com/indices/kospi"
         },
         {
-          "title": "코스피 시세 📈 - 실시간 차트 · 시세 전망 · 투자정보",
-          "url": "https://alphasquare.co.kr/home/stock-summary?code=kospi"
+          "title": "코스피/역사/2026년 - 나무위키",
+          "url": "https://namu.wiki/w/%EC%BD%94%EC%8A%A4%ED%94%BC/%EC%97%AD%EC%82%AC/2026%EB%85%84"
         },
         {
-          "title": "'블루 웨이브 쇼크'에 휘청인 코스피…반등 열쇠는 [주간전망]",
-          "url": "https://www.hankyung.com/article/2026110609346"
+          "title": "[주간증시전망] 반도체 충격에 4900선 무너진 코스피…다음주 美 물가·한은 금통위 '변동성 주의보' : 네이트 뉴스",
+          "url": "https://m.news.nate.com/view/20261121n01342"
         },
         {
-          "title": "실시간 시장요약",
-          "url": "https://alphasquare.co.kr/home/market-summary"
+          "title": "2022.06.05. 코스피(KOSPI) 4시간 관점",
+          "url": "https://in.tradingview.com/chart/KOSPI/cmv5kNnR"
         }
       ]
     }
@@ -96,25 +96,25 @@
           "symbol": "466940",
           "name": "TIGER 은행고배당플러스TOP10",
           "votes": 3,
-          "reason": "은행 이익과 주주환원에 기반해 분배가 이어지기 쉬운 점이 강점입니다.",
-          "caution": "은행 업종에 집중돼 업황 변화에 민감할 위험이 있습니다.",
+          "reason": "은행 주주환원이 분배를 뒷받침하고 반도체 급락과 덜 연동됩니다.",
+          "caution": "은행 업종에 집중된 위험이 있습니다.",
+          "dissent": ""
+        },
+        {
+          "symbol": "452360",
+          "name": "SOL 미국배당다우존스(H)",
+          "votes": 3,
+          "reason": "배당 성장 기업에 환헤지를 더해 꾸준한 분배 기반이 강점입니다.",
+          "caution": "분배율이 낮아 당장의 현금흐름은 적습니다.",
           "dissent": ""
         },
         {
           "symbol": "458760",
           "name": "TIGER 미국배당다우존스타겟커버드콜2호",
-          "votes": 3,
-          "reason": "높은 분배에도 총수익으로 충당해 원금이 유지된 점이 강점입니다.",
-          "caution": "커버드콜 구조라 급반등 때 상승폭이 제한됩니다.",
-          "dissent": ""
-        },
-        {
-          "symbol": "458730",
-          "name": "TIGER 미국배당다우존스",
           "votes": 2,
-          "reason": "커버드콜이 아니어서 배당 성장과 원금 성장을 함께 노리기에 적합합니다.",
-          "caution": "환노출형이라 원화 강세 때 원화 수익이 줄 수 있습니다.",
-          "dissent": "TIGER 미국배당다우존스타겟커버드콜2호와 같은 지수를 기초로 해 묶음 안에서 노출이 중복됩니다."
+          "reason": "높은 분배에도 원금 잠식이 적었던 커버드콜이라는 점이 강점입니다.",
+          "caution": "상승이 제한되고 분배금이 바뀔 위험이 있습니다.",
+          "dissent": "SOL 미국배당다우존스(H)와 같은 배당지수에 겹치고, 커버드콜 구조상 상승 제한과 분배 변동 위험이 있습니다."
         }
       ]
     },
@@ -124,20 +124,20 @@
       "target": "10년 이상 길게 모아갈 분",
       "picks": [
         {
-          "symbol": "360750",
-          "name": "TIGER 미국S&P500",
+          "symbol": "278530",
+          "name": "KODEX 200TR",
           "votes": 3,
-          "reason": "변동성이 낮은 저비용 대표 지수형이라 장기 성장의 핵심 축에 적합합니다.",
-          "caution": "환노출형이라 원화 강세 때 수익이 깎일 위험이 있습니다.",
+          "reason": "분배금을 자동 재투자하는 저비용 대표 지수형으로 장기 복리에 유리합니다.",
+          "caution": "변동성이 매우 크고 반도체 쏠림 위험이 있습니다.",
           "dissent": ""
         },
         {
-          "symbol": "278530",
-          "name": "KODEX 200TR",
-          "votes": 2,
-          "reason": "분배금을 자동 재투자하는 구조라 장기 복리 축적에 적합합니다.",
-          "caution": "변동성과 낙폭이 매우 커 장기 보유 여력이 필요합니다.",
-          "dissent": "RISE 코리아밸류업과 겹치면서 변동성과 낙폭은 더 큰 편입니다."
+          "symbol": "360750",
+          "name": "TIGER 미국S&P500",
+          "votes": 3,
+          "reason": "규모가 가장 큰 저비용 미국 지수형으로 국내 쏠림 분산에 적합합니다.",
+          "caution": "최근 원화 강세로 부진했고 환율 위험이 있습니다.",
+          "dissent": ""
         }
       ]
     },
@@ -147,33 +147,48 @@
       "target": "변동성을 줄이거나 대기 자금을 둘 분",
       "picks": [
         {
-          "symbol": "459580",
-          "name": "KODEX CD금리액티브(합성)",
-          "votes": 3,
-          "reason": "가격 변동이 거의 없고 금리 상승 시 수익도 따라 올라 현금성 완충에 적합합니다.",
-          "caution": "합성 구조라 거래상대방 위험이 있습니다.",
-          "dissent": ""
-        },
-        {
           "symbol": "273130",
           "name": "KODEX 종합채권(AA-이상)액티브",
           "votes": 3,
-          "reason": "주식과 상관이 낮고 급락기에도 오르며 완충 역할이 확인된 점이 강점입니다.",
-          "caution": "금리가 더 오르면 평가손실이 날 위험이 있습니다.",
+          "reason": "주식과 반대로 움직이며 급락기 완충 역할이 확인된 점이 강점입니다.",
+          "caution": "금리가 다시 오르면 손실이 날 위험이 있습니다.",
           "dissent": ""
         },
         {
-          "symbol": "452360",
-          "name": "SOL 미국배당다우존스(H)",
+          "symbol": "459580",
+          "name": "KODEX CD금리액티브(합성)",
           "votes": 2,
-          "reason": "주식과 상관이 낮은 환헤지형으로 하락장에서 방어력을 보인 점이 강점입니다.",
-          "caution": "주식형이라 시장 하락 시 손실 위험이 남아 있습니다.",
-          "dissent": "주식형이라 하락 위험이 남고 인컴 묶음의 다우존스 배당 상품과 노출이 겹칩니다."
+          "reason": "원금 변동이 거의 없고 월 분배가 있어 대기자금 용도에 적합합니다.",
+          "caution": "합성 구조라 거래상대방 위험이 있습니다.",
+          "dissent": "KODEX 머니마켓액티브와 현금성 역할이 겹치고, 합성 구조라 스왑 거래상대방 위험이 있습니다."
+        },
+        {
+          "symbol": "365780",
+          "name": "ACE 국고채10년",
+          "votes": 2,
+          "reason": "금리 하락 구간에서 주식과 반대로 움직여 중기 방어용으로 적합합니다.",
+          "caution": "금리 반등 시 단기채보다 손실이 클 위험이 있습니다.",
+          "dissent": "KODEX 종합채권(AA-이상)액티브와 국내 채권으로 겹치고, 금리 반등 시 손실폭이 더 클 수 있습니다."
         }
       ]
     }
   ],
   "history": [
+    {
+      "date": "2026-11-21",
+      "added": [
+        "ACE 국고채10년"
+      ],
+      "removed": [
+        "TIGER 미국배당다우존스"
+      ],
+      "_added_syms": [
+        "365780"
+      ],
+      "_removed_syms": [
+        "458730"
+      ]
+    },
     {
       "date": "2026-11-14",
       "added": [
