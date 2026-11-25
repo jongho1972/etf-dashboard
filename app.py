@@ -18,12 +18,12 @@ filterwarnings("ignore")
 # 앱 본문 폰트는 .streamlit/config.toml, iframe 표와 차트는 아래 값으로 지정한다.
 FONT_STACK = "Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
 # 다크 고정 팔레트 — 홈페이지(jhawk.kr index.css)와 같은 값. 상승 빨강·하락 파랑(한국식)은 다크용 밝은 톤
-# config.toml [theme]의 bg·surface·text·border·primary(accent_fill)도 같은 값으로 맞춘다
+# config.toml [theme]의 bg·surface·text·border·link(accent)도 같은 값으로 맞춘다
 C = {
-    "bg": "#0b0c0e", "surface": "#15171a", "surface_2": "#1c1f23", "row_alt": "#121417", "total": "#1a2433",
-    "text": "#f2f3f5", "text_2": "#c9ccd2", "text_muted": "#8f949c", "icon": "#aeb3bb",
-    "accent": "#3d9bff", "accent_fill": "#0a6fe0", "accent_fill_hover": "#1a7cf0",
-    "gain": "#ff6b6b", "loss": "#5b9dff", "border": "#24272d", "border_strong": "rgba(255,255,255,0.16)",
+    "bg": "#0c0d0e", "surface": "#151617", "surface_2": "#1c1d1f", "row_alt": "#121314", "total": "#1b2129",
+    "text": "#f1f1ef", "text_2": "#c8c9ca", "text_muted": "#93949a", "icon": "#aeafb3",
+    "accent": "#7fb0ee", "accent_fill": "#e8e8e6", "accent_fill_hover": "#f7f7f5", "on_accent": "#101112",
+    "gain": "#ef7f78", "loss": "#75a7ec", "border": "#26272a", "border_strong": "rgba(255,255,255,0.16)",
 }
 ROOT_CSS = ":root{color-scheme:dark;" + "".join(f"--{k.replace('_', '-')}:{v};" for k, v in C.items()) + "}"
 # iframe(표)은 부모와 color-scheme이 달라 브라우저 기본 캔버스가 칠해지므로 페이지 배경을 직접 채운다
@@ -123,7 +123,7 @@ XP_CSS = """
 .xp-wrap [data-testid="stHeaderActionElements"] { display:none !important; }   /* Streamlit 제목 앵커 아이콘 */
 .xp-wrap h4.xp-name { margin:0; padding:0; font-size:0.95rem; font-weight:700; color:var(--text); line-height:1.4; }
 .xp-wrap h4.xp-name::before { content:counter(xp); display:inline-flex; align-items:center; justify-content:center;
-                      width:20px; height:20px; margin-right:7px; border-radius:50%; background:var(--accent-fill); color:#fff;
+                      width:20px; height:20px; margin-right:7px; border-radius:50%; background:color-mix(in srgb, var(--accent) 16%, transparent); color:var(--accent);
                       font-size:0.72rem; font-weight:700; vertical-align:2px; font-variant-numeric:tabular-nums; }
 .xp-badge { display:inline-block; margin-left:6px; font-size:0.72rem; font-weight:600; padding:1px 7px;
             border-radius:999px; background:var(--surface); border:1px solid var(--border-strong); color:var(--text); vertical-align:1px; white-space:nowrap; }
@@ -391,7 +391,7 @@ def sticky_dataframe(df, fmt=None, height=None, mobile_hide=None):
         f'<div id="etf-modal-name" style="font-size:15px;font-weight:600;color:{C["text"]};margin-bottom:16px;'
         'text-align:center;word-break:keep-all;line-height:1.4;"></div>'
         '<div style="display:flex;gap:8px;">'
-        f'<button onclick="openEtfInfo()" style="flex:1;padding:10px;background:{C["accent_fill"]};color:#fff;border:none;'
+        f'<button onclick="openEtfInfo()" style="flex:1;padding:10px;background:{C["accent_fill"]};color:{C["on_accent"]};border:none;'
         'border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">상품정보</button>'
         f'<button onclick="closeEtfModal()" style="flex:1;padding:10px;background:{C["surface_2"]};color:{C["text"]};border:none;'
         'border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">닫기</button>'
@@ -509,10 +509,9 @@ section.main > div.block-container {
     transform: translateY(-1px);
 }
 .stTabs [aria-selected="true"] {
-    color: #ffffff !important;
+    color: var(--on-accent) !important;
     background: var(--accent-fill) !important;
     border-color: var(--accent-fill) !important;
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-fill) 35%, transparent);
 }
 .stTabs [aria-selected="true"]:hover {
     background: var(--accent-fill-hover) !important;
@@ -523,8 +522,20 @@ section.main > div.block-container {
     display: none !important;
 }
 
+/* ── 대표 버튼: 실버 (PALETTE.md 다크 --btn) ── */
+.stButton button[kind="primary"] {
+    background: var(--accent-fill); border-color: var(--accent-fill); color: var(--on-accent);
+}
+.stButton button[kind="primary"]:hover,
+.stButton button[kind="primary"]:focus-visible {
+    background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); color: var(--on-accent);
+}
+
 /* ── multiselect 칩: 터치 타겟 + 표시 폭 ── */
 .stMultiSelect [data-baseweb="tag"] {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border-strong);
+    color: var(--text);
     max-width: 200px;
     padding: 4px 6px;
 }
