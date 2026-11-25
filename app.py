@@ -20,7 +20,7 @@ FONT_STACK = "Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Ne
 # 다크 고정 팔레트 — 홈페이지(jhawk.kr index.css)와 같은 값. 상승 빨강·하락 파랑(한국식)은 다크용 밝은 톤
 # config.toml [theme]의 bg·surface·text·border·primary(accent_fill)도 같은 값으로 맞춘다
 C = {
-    "bg": "#0b0c0e", "surface": "#15171a", "surface_2": "#1d2025", "row_alt": "#121417", "total": "#1a2433",
+    "bg": "#0b0c0e", "surface": "#15171a", "surface_2": "#1c1f23", "row_alt": "#121417", "total": "#1a2433",
     "text": "#f2f3f5", "text_2": "#c9ccd2", "text_muted": "#8f949c", "icon": "#aeb3bb",
     "accent": "#3d9bff", "accent_fill": "#0a6fe0", "accent_fill_hover": "#1a7cf0",
     "gain": "#ff6b6b", "loss": "#5b9dff", "border": "#24272d", "border_strong": "rgba(255,255,255,0.16)",
