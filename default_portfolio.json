@@ -19,9 +19,8 @@
     ]
   },
   "guard": {
-    "start": "2025-01-21",
-    "stress_start": "2026-07-02",
-    "stress_floor_pct": -5.3,
+    "window_days": 365,
+    "floor_pct": 0.0,
     "breach_alert_days": 14,
     "reopt_gain_pct": 3.0,
     "cap_per_etf": 300000000

@@ -1,10 +1,11 @@
 """What-if 디폴트 설계 조건 점검(매일) + 비중 재최적화(월 1회).
 
-디폴트의 설계 목표는 "분배금을 전액 인출해도 원금 유지 + 하락기 손실 상한 이내에서 세후 월분배 최대화"
-(2026-10-28). select_default.py의 종목 교체는 이 조건을 다시 계산하지 않으므로 여기서 매일 확인한다.
+디폴트의 설계 목표는 "분배금을 전액 인출해도 최근 1년 손실이 상한 이내인 범위에서 세후 월분배 최대화"
+(2026-10-28 도입, 2026-11-26 최근 1년 기준으로 변경). select_default.py의 종목 교체는 이 조건을 다시 계산하지 않으므로 여기서 매일 확인한다.
 
-- 매일: 현재 슬롯 금액으로 guard.start~오늘 가격 수익률(분배금은 인출 → 원주가 기준)을 돌려
-  ① 기말 평가액 ≥ 원금 ② guard.stress_start 이후 손실 ≥ stress_floor_pct 를 판정한다.
+- 매일: 현재 슬롯 금액으로 최근 guard.window_days(1년) 가격 수익률(분배금은 인출 → 원주가 기준)을 돌려
+  최근 1년 손익 ≥ floor_pct 인지 판정한다(2026-11-26 사용자 결정: 고정 기준일 7/2·전체 기간 원금 조건 →
+  매일 1년씩 밀리는 창 하나로 통일. 고정 기준일은 하락이 이어질수록 구간이 늘어나 위반·재조정이 반복됐다).
   위반 시작·breach_alert_days 이상 지속·회복 때만 경고(메일)하고, 나머지 날은 실행 요약에만 남긴다.
 - 월 1회(그 달 첫 실행) 또는 위반이 breach_alert_days 이상 지속되면: SLSQP로 같은 조건의 최적 비중을
   계산해, 월분배가 reopt_gain_pct 이상 많거나 위반이 지속 중이면 메일로 '제안'만 한다.
@@ -16,7 +17,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import date
+from datetime import date, timedelta
 
 import numpy as np
 import pandas as pd
@@ -55,13 +56,18 @@ def fetch_returns(symbols: dict[str, str], start: str) -> tuple[pd.DataFrame, li
     return close.drop(columns=skipped).ffill().pct_change().iloc[1:], skipped
 
 
-def path_stats(amounts: pd.Series, rets: pd.DataFrame, stress_start: str) -> dict:
-    """amounts(이름→금액)를 매일 목표 비중으로 유지할 때의 원금 대비 수익률(%)."""
+def window_returns(symbols: dict[str, str], g: dict) -> tuple[pd.DataFrame, list[str]]:
+    """최근 g['window_days']일 수익률. 창 시작 전 상장 종목만 남긴다(여유분 7일을 받아 결측 판정 후 자름)."""
+    rets, skipped = fetch_returns(symbols, (date.today() - timedelta(days=g["window_days"] + 7)).isoformat())
+    return rets.loc[rets.index[-1] - pd.Timedelta(days=g["window_days"]):], skipped
+
+
+def path_stats(amounts: pd.Series, rets: pd.DataFrame) -> dict:
+    """amounts(이름→금액)를 매일 목표 비중으로 유지할 때 창 시작 대비 수익률(%)."""
     r = rets[amounts.index] @ (amounts / amounts.sum())
     v = (1 + r).cumprod()
     return {"end": (v.iloc[-1] - 1) * 100,
             "low": (v.min() - 1) * 100,
-            "stress": ((1 + r.loc[stress_start:]).prod() - 1) * 100,
             "mdd": (v / v.cummax() - 1).min() * 100}
 
 
@@ -72,21 +78,18 @@ def monthly_div(amounts: pd.Series, snap: pd.DataFrame) -> float:
 
 
 def breaches(st: dict, g: dict) -> list[str]:
-    out = []
-    if st["end"] < 0:
-        out.append(f"원금 미달 {st['end']:+.2f}%")
-    if st["stress"] < g["stress_floor_pct"]:
-        out.append(f"{g['stress_start']} 이후 손실 {st['stress']:+.2f}% < 상한 {g['stress_floor_pct']}%")
-    return out
+    if st["end"] < g["floor_pct"]:
+        return [f"최근 1년 손실 {st['end']:+.2f}% < 상한 {g['floor_pct']}%"]
+    return []
 
 
 def fmt_stats(st: dict, g: dict) -> str:
-    return (f"원금 대비 {st['end']:+.2f}% (최저 {st['low']:+.1f}%, MDD {st['mdd']:.1f}%) · "
-            f"{g['stress_start']} 이후 {st['stress']:+.2f}% (상한 {g['stress_floor_pct']}%)")
+    return (f"최근 1년 {st['end']:+.2f}% (상한 {g['floor_pct']}%, 최저 {st['low']:+.1f}%, "
+            f"MDD {st['mdd']:.1f}%)")
 
 
 def reoptimize(snap: pd.DataFrame, cfg: dict) -> tuple[pd.Series, pd.DataFrame] | None:
-    """조건(원금 유지·하락기 손실 상한·그룹 한도·종목 상한·현금 고정)을 지키며 세후 분배율 가중합 최대화.
+    """조건(최근 1년 손실 상한·그룹 한도·종목 상한·현금 고정)을 지키며 세후 분배율 가중합 최대화.
     천만원 단위로 내린 뒤 남는 돈은 조건을 지키는 범위에서 고분배 종목부터 채운다. 실패 시 None."""
     from scipy.optimize import minimize  # 대시보드 이미지엔 scipy가 없어 지연 import
 
@@ -94,16 +97,16 @@ def reoptimize(snap: pd.DataFrame, cfg: dict) -> tuple[pd.Series, pd.DataFrame] 
     cash_slot = next(s for s in cfg["slots"] if s["exposure"] == "현금")
     cash_name, cash = cash_slot["name"], cash_slot["amount"]
     cap, max_group = g["cap_per_etf"], cfg["rules"]["max_exposure_pct"] / 100
-    log_floor = np.log1p(g["stress_floor_pct"] / 100)
+    log_floor = np.log1p(g["floor_pct"] / 100)
 
     us = snap[snap.index.str.contains("미국") & (snap["시총"] >= cfg["rules"]["min_marcap"])]
     us = us[us.index.str.contains(BROAD) & ~us.index.str.contains(POOL_EXCLUDE)]
     pool = sorted(set(us.index) | {cash_name})
-    rets, _ = fetch_returns(snap.loc[pool, "Symbol"].to_dict(), g["start"])
+    rets, _ = window_returns(snap.loc[pool, "Symbol"].to_dict(), g)
     names = list(rets.columns)
     if cash_name not in names:
         return None
-    R, Rs = rets.values, rets.loc[g["stress_start"]:].values
+    R = rets.values
     yld = (snap.loc[names, "연간배당금"] / snap.loc[names, "주가"] * DIV_NET).values
     k, ci = len(names), names.index(cash_name)
     groups: dict[str, list[int]] = {}
@@ -111,8 +114,8 @@ def reoptimize(snap: pd.DataFrame, cfg: dict) -> tuple[pd.Series, pd.DataFrame] 
         if i != ci:
             groups.setdefault(name_group(n), []).append(i)
 
-    # 수익 조건(원금 유지·하락기 손실 상한)과 그룹 한도. SLSQP 제약과 반올림 후 검사가 같은 식을 쓴다
-    returns_ok = [lambda w: np.log1p(R @ w).sum(), lambda w: np.log1p(Rs @ w).sum() - log_floor]
+    # 수익 조건(최근 1년 손실 상한)과 그룹 한도. SLSQP 제약과 반올림 후 검사가 같은 식을 쓴다
+    returns_ok = [lambda w: np.log1p(R @ w).sum() - log_floor]
     group_ok = [lambda w, idx=idx: max_group - w[idx].sum() for idx in groups.values()]
 
     bnds = [(0, cap / total)] * k
@@ -151,11 +154,11 @@ def run(cfg: dict, snap: pd.DataFrame, as_of: str) -> tuple[list[str], list[str]
     g = cfg["guard"]
     state = json.loads(STATE_JSON.read_text(encoding="utf-8")) if STATE_JSON.exists() else {}
     amounts = pd.Series({s["name"]: s["amount"] for s in cfg["slots"]}, dtype="int64")
-    rets, skipped = fetch_returns(snap.loc[amounts.index, "Symbol"].to_dict(), g["start"])
+    rets, skipped = window_returns(snap.loc[amounts.index, "Symbol"].to_dict(), g)
     if skipped:
         return [], [f"설계 조건 점검 생략(시세 조회 실패·이력 부족): {', '.join(skipped)}"]
 
-    st = path_stats(amounts, rets, g["stress_start"])
+    st = path_stats(amounts, rets)
     cur_div = monthly_div(amounts, snap)
     bad = breaches(st, g)
     summary = [f"- 설계 조건: {fmt_stats(st, g)} · 세후 월분배 {cur_div / 1e4:,.0f}만 — "
@@ -197,9 +200,9 @@ def _reopt(cfg: dict, snap: pd.DataFrame, amounts: pd.Series, cur_div: float,
     except Exception as e:  # 재최적화 실패가 일일 점검을 막지 않도록
         return [], [f"월간 재최적화 실패: {type(e).__name__}: {e}"]
     if result is None:
-        return [], ["월간 재최적화: 조건을 모두 지키는 비중을 찾지 못함 — 하락기 손실 상한·그룹 한도 재검토 필요"]
+        return [], ["월간 재최적화: 조건을 모두 지키는 비중을 찾지 못함 — 최근 1년 손실 상한·그룹 한도 재검토 필요"]
     amt, rets = result
-    st, div = path_stats(amt, rets, g["stress_start"]), monthly_div(amt, snap)
+    st, div = path_stats(amt, rets), monthly_div(amt, snap)
     gain = (div / cur_div - 1) * 100
     head = f"재최적화안: 세후 월분배 {div / 1e4:,.0f}만 (현재 대비 {gain:+.1f}%) · {fmt_stats(st, g)}"
     if not (breached or gain >= g["reopt_gain_pct"]):
