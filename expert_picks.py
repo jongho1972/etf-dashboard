@@ -36,10 +36,17 @@ PRICE_IN, PRICE_OUT, PRICE_SEARCH = 4, 20, 0.01   # $/1M 토큰, $/검색 (비�
 # select_default.MONTHLY_LABELS와 같은 값. 그 모듈은 yfinance를 import해 생성 워크플로에 쓰지 않는다
 MONTHLY_LABELS = ["월초", "월중"]
 
+# 커버드콜 판단 기준. 고분배 커버드콜을 구조만 보고 일괄 제외해 월배당 묶음의 분배율이 낮아지는 것을 막는다(2026-11-28)
+COVERED_CALL_RULE = (
+    "커버드콜은 구조만으로 일괄 제외하지 않는다. 1Y·2Y 총수익이 플러스이고 같은 기초지수 일반형과 총수익 차이가 작으면 "
+    "원금 훼손으로 보지 않는다. 총수익이 마이너스이거나 최대낙폭이 큰 상품은 원금 잠식으로 본다."
+)
+
 BUNDLES = [
     {"key": "income", "title": "월배당 현금흐름",
      "target": "매달 생활비·현금흐름이 필요한 분",
-     "brief": "매달 분배금이 나오고 분배금이 지속 가능한 상품(배당주기 월초·월중만). 원금 훼손 위험도 함께 따진다.",
+     "brief": "매달 분배금이 나오고 분배금이 지속 가능한 상품(배당주기 월초·월중, 1Y배당률이 월배당 후보 중앙값 {income_min:.1f}% 이상만). "
+              "원금 훼손 위험도 함께 따진다. " + COVERED_CALL_RULE,
      "monthly": True},
     {"key": "growth", "title": "장기 성장",
      "target": "10년 이상 길게 모아갈 분",
@@ -173,11 +180,12 @@ usage = []
 
 
 # ── 2. 1라운드: 제안 ───────────────────────────────────────
-def bundles_brief() -> str:
-    return "\n".join(f"- {b['key']} ({b['title']}): {b['brief']}" for b in BUNDLES)
+def bundles_brief(income_min) -> str:
+    return "\n".join(f"- {b['key']} ({b['title']}): "
+                     + b["brief"].format(income_min=income_min) for b in BUNDLES)
 
 
-def round1(expert, table, today):
+def round1(expert, table, today, brief):
     system = (
         f"당신은 한국 상장 ETF를 다루는 {expert['name']} 전문가다. 관점: {expert['lens']}\n"
         "일반 개인 투자자를 위한 목적별 ETF 추천 패널에 참여한다. " + GUARDRAIL
@@ -187,7 +195,7 @@ def round1(expert, table, today):
         "그다음 아래 후보 표에서만 골라 묶음별로 2~4개 종목을 제안하라. 표에 없는 종목은 제안하지 않는다. "
         "수익률만 보지 말고 2년 성과·변동성·최대낙폭·주식상관(낮을수록 주식과 따로 움직임)도 함께 따진다. '주목' 열은 참고 표시일 뿐이며 표시가 없는 종목도 똑같이 고를 수 있다. "
         "'최근' 열이 부진인 종목은 일시적 시장 흐름 때문인지 구조적 문제(분배금 축소·지수 변경·업황 훼손 등) 때문인지 확인하고, 제안한다면 이유에 그 판단을 밝힌다.\n\n"
-        f"[묶음]\n{bundles_brief()}\n\n[후보 표 — 대시보드 스냅샷]\n{table}\n\n"
+        f"[묶음]\n{brief}\n\n[후보 표 — 대시보드 스냅샷]\n{table}\n\n"
         "출력 형식(한국어, 간결하게):\n"
         "## 시장 판단\n2~3문장\n"
         "## 제안\n각 줄: 묶음키 | 코드 | 상품명 | 이유 1문장\n"
@@ -226,13 +234,13 @@ VOTE_SCHEMA = {
 }
 
 
-def round2(expert, r1_all, ballot, table):
+def round2(expert, r1_all, ballot, table, brief):
     others = "\n\n".join(f"### {r['expert']['name']} 전문가 1라운드 의견\n{r['text']}" for r in r1_all)
     system = (
         f"당신은 {expert['name']} 전문가다. 관점: {expert['lens']}\n" + GUARDRAIL
     )
     user = (
-        f"패널 3명의 1라운드 의견:\n{others}\n\n[후보 표]\n{table}\n\n"
+        f"[묶음]\n{brief}\n\n패널 3명의 1라운드 의견:\n{others}\n\n[후보 표]\n{table}\n\n"
         f"[투표 대상 — 묶음키 | 코드 | 상품명]\n{ballot}\n\n"
         "투표 대상의 모든 줄에 대해, 그 종목이 해당 묶음의 목적에 맞는 추천으로 적절한지 당신 관점에서 찬성/반대를 정하라. "
         "같은 묶음에 비슷한 상품이 겹치면 더 나은 쪽만 찬성한다. 후보 표 '최근' 열이 부진인 종목은 부진 원인이 해소될 일시적 요인인지도 따진다. reason은 한국어 1문장(40자 안팎)."
@@ -343,13 +351,17 @@ def main(dry_run=False):
     cand = build_candidates(df)
     names = dict(zip(df["Symbol"], df["Name"]))
     valid = set(cand["Symbol"])
-    monthly = set(cand.loc[cand["배당일"].isin(MONTHLY_LABELS), "Symbol"])
-    eligible = {b["key"]: monthly if b.get("monthly") else valid for b in BUNDLES}
+    # 월배당 묶음은 월배당 후보 중 1Y배당률 중앙값 이상만(현금성 저분배 상품이 '현금흐름' 묶음을 채우지 않게)
+    monthly = cand[cand["배당일"].isin(MONTHLY_LABELS)]
+    income_min = float(monthly["1Y배당률"].median())
+    income_ok = set(monthly.loc[monthly["1Y배당률"] >= income_min, "Symbol"])
+    eligible = {b["key"]: income_ok if b.get("monthly") else valid for b in BUNDLES}
+    brief = bundles_brief(income_min)
     table = candidates_table(cand)
-    print(f"후보 {len(cand)}개 (스냅샷 기준일 {asof})")
+    print(f"후보 {len(cand)}개 (스냅샷 기준일 {asof}), 월배당 하한 {income_min:.2f}% → {len(income_ok)}개")
 
     with ThreadPoolExecutor(3) as ex:
-        r1_all = list(ex.map(lambda e: round1(e, table, today), EXPERTS))
+        r1_all = list(ex.map(lambda e: round1(e, table, today, brief), EXPERTS))
     proposals = [p for r in r1_all for p in parse_proposals(r["text"], eligible)]
     keys = sorted(set(proposals))
     if not keys:
@@ -360,7 +372,7 @@ def main(dry_run=False):
     print(f"1라운드 제안 {len(keys)}건")
 
     with ThreadPoolExecutor(3) as ex:
-        r2_all = list(ex.map(lambda e: round2(e, r1_all, ballot, ballot_table), EXPERTS))
+        r2_all = list(ex.map(lambda e: round2(e, r1_all, ballot, ballot_table, brief), EXPERTS))
     final = tally(r2_all, proposals, names)
     print("합의 통과:", {b: [p["name"] for p in v] for b, v in final.items()})
 
