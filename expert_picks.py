@@ -36,24 +36,38 @@ PRICE_IN, PRICE_OUT, PRICE_SEARCH = 4, 20, 0.01   # $/1M 토큰, $/검색 (비�
 # select_default.MONTHLY_LABELS와 같은 값. 그 모듈은 yfinance를 import해 생성 워크플로에 쓰지 않는다
 MONTHLY_LABELS = ["월초", "월중"]
 
-# 커버드콜 판단 기준. 고분배 커버드콜을 구조만 보고 일괄 제외해 월배당 묶음의 분배율이 낮아지는 것을 막는다(2026-11-28)
-COVERED_CALL_RULE = (
-    "커버드콜은 구조만으로 일괄 제외하지 않는다. 1Y·2Y 총수익이 플러스이고 같은 기초지수 일반형과 총수익 차이가 작으면 "
-    "원금 훼손으로 보지 않는다. 총수익이 마이너스이거나 최대낙폭이 큰 상품은 원금 잠식으로 본다."
-)
+# 묶음 자격 조건(코드로 강제, 2026-11-28 전문가 검토 반영). 프롬프트 지시만으로는 원금 잠식형 고분배 상품을 막지 못했다
+INCOME_MIN_YIELD = 4.0    # 월배당 1Y배당률 하한(%). 중앙값 하한은 주마다 흔들리고 원금이 는 배당주를 빼서 고정값으로
+INCOME_MAX_DD = -25       # 월배당 1Y최대낙폭 하한(%)
+DEF_ELIG_CORR, DEF_ELIG_VOL, DEF_ELIG_DD = 0.3, 10, -15   # 방어: 주식상관 이하·1Y변동성 이하·1Y최대낙폭 초과
+
+
+def _income_ok(d: pd.DataFrame) -> pd.Series:
+    """월배당·분배율 하한 + 1Y 총수익 플러스 + 2Y 연환산 0% 이상(상장 2년 미만은 1Y만) + 낙폭 제한."""
+    return (d["배당일"].isin(MONTHLY_LABELS) & (d["1Y배당률"] >= INCOME_MIN_YIELD)
+            & (d["1Y총수익률"] > 0) & (d["2Y연환산총수익률"].fillna(0) >= 0) & (d["1Y최대낙폭"] > INCOME_MAX_DD))
+
+
+def _defense_ok(d: pd.DataFrame) -> pd.Series:
+    return (d["주식상관"] <= DEF_ELIG_CORR) & (d["1Y변동성"] <= DEF_ELIG_VOL) & (d["1Y최대낙폭"] > DEF_ELIG_DD)
+
 
 BUNDLES = [
     {"key": "income", "title": "월배당 현금흐름",
      "target": "매달 생활비·현금흐름이 필요한 분",
-     "brief": "매달 분배금이 나오고 분배금이 지속 가능한 상품(배당주기 월초·월중, 1Y배당률이 월배당 후보 중앙값 {income_min:.1f}% 이상만). "
-              "원금 훼손 위험도 함께 따진다. " + COVERED_CALL_RULE,
-     "monthly": True},
+     "brief": f"매달 분배금이 나오고 분배금이 지속 가능한 상품. 자격(코드 확인): 배당주기 월초·월중, 1Y배당률 {INCOME_MIN_YIELD:g}% 이상, "
+              f"1Y 총수익 플러스, 2Y 연환산 총수익 0% 이상(상장 2년 미만은 1Y만), 1Y최대낙폭 {INCOME_MAX_DD}%보다 얕음. "
+              "커버드콜도 자격을 통과했으면 구조만으로 배제하지 않는다. 분배율이 총수익보다 크면 원금에서 분배하는 것이니 감안한다.",
+     "ok": _income_ok},
     {"key": "growth", "title": "장기 성장",
      "target": "10년 이상 길게 모아갈 분",
-     "brief": "분배보다 총수익(가격+배당)을 키우는 상품. 저비용 지수형 위주."},
+     "brief": "분배보다 총수익(가격+배당)을 키우는 상품. 저비용 지수형 위주.",
+     "ok": lambda d: pd.Series(True, index=d.index)},
     {"key": "defense", "title": "안정·방어",
      "target": "변동성을 줄이거나 대기 자금을 둘 분",
-     "brief": "하락장 완충·현금성·채권 등 주식과 다르게 움직이는 상품."},
+     "brief": f"하락장 완충·현금성·채권 등 주식과 다르게 움직이는 상품. 자격(코드 확인): 주식상관 {DEF_ELIG_CORR} 이하, "
+              f"1Y변동성 {DEF_ELIG_VOL}% 이하, 1Y최대낙폭 {DEF_ELIG_DD}%보다 얕음.",
+     "ok": _defense_ok},
 ]
 BUNDLE_KEYS = [b["key"] for b in BUNDLES]
 
@@ -116,6 +130,8 @@ def build_candidates(df: pd.DataFrame) -> pd.DataFrame:
     d["주목"] = ["·".join(t for t, idx in tags.items() if i in idx) or "-" for i in d.index]
     gap = d["3M총수익률"] - d.groupby("분류")["3M총수익률"].transform("median")
     d["최근"] = (gap <= WEAK_GAP).map({True: "부진", False: "-"})
+    ok = {b["key"]: b["ok"](d) for b in BUNDLES}
+    d["자격"] = ["·".join(k for k, m in ok.items() if m[i]) or "-" for i in d.index]
     return d.sort_values(["분류", "시총"], ascending=[True, False])
 
 
@@ -125,7 +141,8 @@ TABLE_COLS = {"Symbol": "코드", "Name": "상품명", "분류": "분류", "시�
               "3M총수익률": "3M총수익", "1Y변동성": "1Y변동성", "1Y최대낙폭": "1Y최대낙폭",
               "주식상관": "주식상관(KOSPI200·S&P500 중 큰 값)", "배당일": "배당주기",
               "주목": "주목(배당=월배당 배당률 상위·성장=1Y·2Y·위험조정 상위·대표=분류별 시총 상위·방어=저상관·저변동)",
-              "최근": f"최근(부진=3M총수익이 같은 분류 중앙값보다 {-WEAK_GAP}%p 이상 낮음)"}
+              "최근": f"최근(부진=3M총수익이 같은 분류 중앙값보다 {-WEAK_GAP}%p 이상 낮음)",
+              "자격": "자격(이 종목을 넣을 수 있는 묶음키)"}
 
 
 def _cell(col, v) -> str:
@@ -180,9 +197,8 @@ usage = []
 
 
 # ── 2. 1라운드: 제안 ───────────────────────────────────────
-def bundles_brief(income_min) -> str:
-    return "\n".join(f"- {b['key']} ({b['title']}): "
-                     + b["brief"].format(income_min=income_min) for b in BUNDLES)
+def bundles_brief() -> str:
+    return "\n".join(f"- {b['key']} ({b['title']}): {b['brief']}" for b in BUNDLES)
 
 
 def round1(expert, table, today, brief):
@@ -192,7 +208,7 @@ def round1(expert, table, today, brief):
     )
     user = (
         f"오늘은 {today}(KST)다. 웹 검색으로 이번 주 금리·환율·주식시장 상황과 당신 관점에서 중요한 뉴스를 확인하라(검색은 꼭 필요한 만큼만).\n"
-        "그다음 아래 후보 표에서만 골라 묶음별로 2~4개 종목을 제안하라. 표에 없는 종목은 제안하지 않는다. "
+        "그다음 아래 후보 표에서만 골라 묶음별로 2~4개 종목을 제안하라. 표에 없는 종목, '자격' 열에 그 묶음키가 없는 종목은 제안하지 않는다. "
         "수익률만 보지 말고 2년 성과·변동성·최대낙폭·주식상관(낮을수록 주식과 따로 움직임)도 함께 따진다. '주목' 열은 참고 표시일 뿐이며 표시가 없는 종목도 똑같이 고를 수 있다. "
         "'최근' 열이 부진인 종목은 일시적 시장 흐름 때문인지 구조적 문제(분배금 축소·지수 변경·업황 훼손 등) 때문인지 확인하고, 제안한다면 이유에 그 판단을 밝힌다.\n\n"
         f"[묶음]\n{brief}\n\n[후보 표 — 대시보드 스냅샷]\n{table}\n\n"
@@ -351,14 +367,10 @@ def main(dry_run=False):
     cand = build_candidates(df)
     names = dict(zip(df["Symbol"], df["Name"]))
     valid = set(cand["Symbol"])
-    # 월배당 묶음은 월배당 후보 중 1Y배당률 중앙값 이상만(현금성 저분배 상품이 '현금흐름' 묶음을 채우지 않게)
-    monthly = cand[cand["배당일"].isin(MONTHLY_LABELS)]
-    income_min = float(monthly["1Y배당률"].median())
-    income_ok = set(monthly.loc[monthly["1Y배당률"] >= income_min, "Symbol"])
-    eligible = {b["key"]: income_ok if b.get("monthly") else valid for b in BUNDLES}
-    brief = bundles_brief(income_min)
+    eligible = {b["key"]: set(cand.loc[cand["자격"].str.contains(b["key"]), "Symbol"]) for b in BUNDLES}
+    brief = bundles_brief()
     table = candidates_table(cand)
-    print(f"후보 {len(cand)}개 (스냅샷 기준일 {asof}), 월배당 하한 {income_min:.2f}% → {len(income_ok)}개")
+    print(f"후보 {len(cand)}개 (스냅샷 기준일 {asof}), 묶음 자격", {k: len(v) for k, v in eligible.items()})
 
     with ThreadPoolExecutor(3) as ex:
         r1_all = list(ex.map(lambda e: round1(e, table, today, brief), EXPERTS))
